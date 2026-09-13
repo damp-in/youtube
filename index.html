@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14130f;
+    --surface: #1c1a15;
+    --surface-hover: #262319;
+    --accent: #e2a542;
+    --accent-dim: rgba(226, 165, 66, 0.15);
+    --accent-dim-2: rgba(226, 165, 66, 0.32);
+    --text: #f2ede0;
+    --muted: #9c9585;
+    --border: #2c2820;
+    --danger: #d9776a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(20, 19, 15, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 22px 28px 18px 28px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    max-width: 1100px;
+    margin: 0 auto 16px auto;
+  }
+
+  .title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 26px;
+    letter-spacing: 0.2px;
+  }
+
+  .title span {
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 400;
+    margin-left: 10px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .icon-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 8px 13px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: 0.15s ease;
+  }
+
+  .icon-btn:hover {
+    color: var(--text);
+    border-color: var(--accent-dim-2);
+    background: var(--surface-hover);
+  }
+
+  .search-row {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+  }
+
+  .search-box {
+    flex: 1;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 13px 16px 13px 40px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: 0.15s ease;
+  }
+
+  .search-box input:focus {
+    border-color: var(--accent-dim-2);
+    background: var(--surface-hover);
+  }
+
+  .search-box svg {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    stroke: var(--muted);
+  }
+
+  .add-form {
+    max-width: 1100px;
+    margin: 12px auto 0 auto;
+    display: flex;
+    gap: 10px;
+  }
+
+  .add-form input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 14px;
+    border-radius: 9px;
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+  }
+
+  .add-form input:focus {
+    border-color: var(--accent-dim-2);
+  }
+
+  .add-form input#urlInput { flex: 1; }
+
+  .add-preview {
+    max-width: 1100px;
+    margin: 8px auto 0 auto;
+    font-size: 12.5px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0 2px;
+  }
+
+  .add-form button {
+    background: var(--accent);
+    color: #1a1508;
+    border: none;
+    border-radius: 9px;
+    padding: 0 20px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.15s ease;
+  }
+
+  .add-form button:hover { filter: brightness(1.08); }
+
+  main {
+    max-width: 1100px;
+    margin: 28px auto 80px auto;
+    padding: 0 28px;
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  .filter-tab {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.15s ease;
+  }
+
+  .filter-tab.active {
+    background: var(--accent-dim);
+    border-color: var(--accent-dim-2);
+    color: var(--accent);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 18px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: 0.15s ease;
+    position: relative;
+  }
+
+  .card:hover {
+    border-color: var(--accent-dim-2);
+    transform: translateY(-2px);
+  }
+
+  .thumb-wrap {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #0f0e0b;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .thumb-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 34px;
+    color: var(--muted);
+    background: linear-gradient(135deg, #201d16, #14130f);
+  }
+
+  .play-badge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0);
+    transition: 0.15s ease;
+  }
+
+  .play-badge svg {
+    opacity: 0;
+    transition: 0.15s ease;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+  }
+
+  .thumb-wrap:hover .play-badge { background: rgba(0,0,0,0.25); }
+  .thumb-wrap:hover .play-badge svg { opacity: 1; }
+
+  .card-body {
+    padding: 13px 14px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+  }
+
+  .card-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-domain {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .card-note {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: 0.15s ease;
+  }
+
+  .card:hover .card-actions { opacity: 1; }
+
+  .card-actions button {
+    background: rgba(20,19,15,0.85);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-actions button:hover { color: var(--danger); border-color: var(--danger); }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state .title {
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 9, 6, 0.82);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 760px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+
+  .modal-player {
+    aspect-ratio: 16 / 9;
+    background: #000;
+  }
+
+  .modal-player iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .modal-info {
+    padding: 18px 20px;
+  }
+
+  .modal-info .card-title { font-size: 16px; margin-bottom: 6px; -webkit-line-clamp: 3; }
+
+  .modal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+  }
+
+  .modal-row a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 20px;
+  }
+
+  .banner {
+    max-width: 1100px;
+    margin: 0 auto 14px auto;
+    padding: 10px 16px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-dim-2);
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: var(--accent);
+    display: none;
+  }
+
+  .banner.show { display: block; }
+
+  #importInput { display: none; }
+
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="title">Vault<span id="countLabel">0 links</span></div>
+    <div class="header-actions">
+      <button class="icon-btn" id="importBtn">Import Safari bookmarks</button>
+      <button class="icon-btn" id="bookmarkletBtn">Get quick-save button</button>
+      <button class="icon-btn" id="deleteAllBtn" style="color:var(--danger); border-color:rgba(217,119,106,0.35);">Delete all</button>
+    </div>
+  </div>
+  <div class="search-row">
+    <div class="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search your links">
+    </div>
+  </div>
+  <div class="add-form">
+    <input type="text" id="urlInput" placeholder="Paste a link, the title is grabbed automatically">
+    <button id="addBtn">Save</button>
+  </div>
+  <div class="add-preview" id="addPreview" style="display:none;"></div>
+</header>
+
+<main>
+  <div class="banner" id="localBanner">Running in local mode. Your links are saved on this device only. Add your Firebase config near the top of this file's script to sync across browsers and devices.</div>
+
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all">All</button>
+    <button class="filter-tab" data-filter="youtube">YouTube</button>
+    <button class="filter-tab" data-filter="instagram">Instagram</button>
+    <button class="filter-tab" data-filter="other">Pages</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="title">Nothing here yet</div>
+    <div>Paste a link above, or import your Safari bookmarks to get started.</div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-info">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div class="card-title" id="modalTitle"></div>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="card-domain" id="modalDomain"></div>
+      <textarea id="modalNote" placeholder="Add a note" style="width:100%; margin-top:12px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px; font-family:'Inter',sans-serif; font-size:13px; min-height:60px; resize:vertical;"></textarea>
+      <input type="text" id="modalThumb" placeholder="Paste an image URL to set the thumbnail manually" style="width:100%; margin-top:8px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px; font-family:'JetBrains Mono',monospace; font-size:12px;">
+      <div class="modal-row">
+        <button class="icon-btn" id="modalPlay">Open link</button>
+        <button class="icon-btn" id="modalSave">Save note</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importInput" accept=".html">
+
+<script type="module">
+  // ---------------------------------------------------------------
+  // FIREBASE SETUP
+  // Create a free project at https://console.firebase.google.com
+  // Enable Firestore Database (production or test mode, either works)
+  // Then paste your project config into firebaseConfig below.
+  // Leaving this as placeholders keeps the app running in local mode,
+  // where links are saved in this browser only, using localStorage.
+  // ---------------------------------------------------------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyB6lQOLTFquB762EaaPves-PEOsgzbNwOQ",
+    authDomain: "tube-2d0c3.firebaseapp.com",
+    projectId: "tube-2d0c3",
+    storageBucket: "tube-2d0c3.firebasestorage.app",
+    messagingSenderId: "215369774067",
+    appId: "1:215369774067:web:c49deb0d3a374506279886"
+  };
+
+  const useFirebase = firebaseConfig.apiKey !== "YOUR_API_KEY";
+  let db, collectionRef, onSnapshot, addDoc, deleteDoc, doc, updateDoc;
+
+  let items = [];
+  let activeFilter = "all";
+
+  if (useFirebase) {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    collectionRef = fs.collection(db, "bookmarks");
+    onSnapshot = fs.onSnapshot;
+    addDoc = fs.addDoc;
+    deleteDoc = fs.deleteDoc;
+    doc = fs.doc;
+    updateDoc = fs.updateDoc;
+
+    onSnapshot(collectionRef, (snap) => {
+      items = [];
+      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      render();
+    });
+  } else {
+    document.getElementById("localBanner").classList.add("show");
+    items = JSON.parse(localStorage.getItem("vault_items") || "[]");
+    render();
+  }
+
+  function persistLocal() {
+    localStorage.setItem("vault_items", JSON.stringify(items));
+  }
+
+  async function addItem(data) {
+    data.createdAt = Date.now();
+    if (useFirebase) {
+      await addDoc(collectionRef, data);
+    } else {
+      data.id = "local_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+      items.unshift(data);
+      persistLocal();
+      render();
+    }
+  }
+
+  async function removeItem(id) {
+    if (useFirebase) {
+      await deleteDoc(doc(db, "bookmarks", id));
+    } else {
+      items = items.filter((i) => i.id !== id);
+      persistLocal();
+      render();
+    }
+  }
+
+  async function updateItem(id, patch) {
+    if (useFirebase) {
+      await updateDoc(doc(db, "bookmarks", id), patch);
+    } else {
+      const item = items.find((i) => i.id === id);
+      if (item) Object.assign(item, patch);
+      persistLocal();
+      render();
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // LINK PARSING HELPERS
+  // ---------------------------------------------------------------
+  function getDomain(url) {
+    try { return new URL(url).hostname.replace("www.", ""); }
+    catch { return url; }
+  }
+
+  function getYouTubeId(url) {
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+      if (u.hostname.includes("youtube.com")) {
+        if (u.pathname === "/watch") return u.searchParams.get("v");
+        if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2];
+        if (u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2];
+      }
+    } catch { return null; }
+    return null;
+  }
+
+  function getInstagramLink(url) {
+    try { return new URL(url).hostname.includes("instagram.com"); }
+    catch { return false; }
+  }
+
+  function decodeEntities(str) {
+    const div = document.createElement("div");
+    div.innerHTML = str;
+    return div.textContent.trim();
+  }
+
+  function extractOpenGraph(html) {
+    const titleMatch =
+      html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:title["']/i);
+    const imageMatch =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']*)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:image["']/i);
+    const plainTitleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+
+    let title = titleMatch ? decodeEntities(titleMatch[1]) : (plainTitleMatch ? decodeEntities(plainTitleMatch[1]) : null);
+    let image = imageMatch ? imageMatch[1] : null;
+
+    // Instagram, and some other sites, strip the meta tags for non-browser
+    // requests but still leave the same data inside a structured data
+    // script block meant for search engines, so check there next.
+    if (!image || !title) {
+      const ldBlocks = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+      for (const block of ldBlocks) {
+        try {
+          const jsonText = block.replace(/<script[^>]*>/i, "").replace(/<\/script>/i, "");
+          const data = JSON.parse(jsonText);
+          const entry = Array.isArray(data) ? data[0] : data;
+          if (!image && entry.image) {
+            image = Array.isArray(entry.image) ? entry.image[0] : (entry.image.url || entry.image);
+          }
+          if (!title && (entry.headline || entry.name || entry.caption)) {
+            title = entry.headline || entry.name || entry.caption;
+          }
+        } catch {}
+        if (image && title) break;
+      }
+    }
+
+    return { title, image };
+  }
+
+  // Tries a few different public proxy sources in order, since any single
+  // one can be slow, rate limited, or blocked for a specific site at a
+  // given moment.
+  async function fetchPageHtml(url) {
+    const proxies = [
+      (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+      (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`
+    ];
+    for (const buildUrl of proxies) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(buildUrl(url), { signal: controller.signal });
+        clearTimeout(timer);
+        if (res.ok) {
+          const text = await res.text();
+          if (text && text.length > 300) return text;
+        }
+      } catch {}
+    }
+    return null;
+  }
+
+  // Fetches a title and a thumbnail without any manual typing. YouTube's own
+  // oEmbed endpoint is reliable and official. For Instagram and everything
+  // else, this reads the page's Open Graph tags, the same preview data a
+  // site shows when shared on social media, falling back to structured data
+  // if the tags themselves are stripped. Instagram can still block this for
+  // private accounts or under heavy traffic, in that case the link still
+  // saves fine with a plain title.
+  async function fetchMeta(url, ytId) {
+    if (ytId) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 6000);
+        const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`, { signal: controller.signal });
+        clearTimeout(timer);
+        if (res.ok) {
+          const json = await res.json();
+          return { title: json.title, thumbnail: json.thumbnail_url };
+        }
+      } catch {}
+      return { title: null, thumbnail: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` };
+    }
+
+    const html = await fetchPageHtml(url);
+    if (!html) return { title: null, thumbnail: null };
+    const og = extractOpenGraph(html);
+    return { title: og.title, thumbnail: og.image };
+  }
+
+  async function buildEntry(rawUrl, fallbackTitle) {
+    let url = rawUrl.trim();
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    const ytId = getYouTubeId(url);
+    const isInstagram = getInstagramLink(url);
+    const platform = ytId ? "youtube" : isInstagram ? "instagram" : "other";
+    const meta = await fetchMeta(url, ytId);
+
+    return {
+      url,
+      title: meta.title || fallbackTitle || getDomain(url),
+      domain: getDomain(url),
+      type: platform === "other" ? "other" : "video",
+      platform,
+      youtubeId: ytId || null,
+      thumbnail: meta.thumbnail || `https://www.google.com/s2/favicons?sz=128&domain=${getDomain(url)}`,
+      hasRealImage: !!meta.thumbnail,
+      note: ""
+    };
+  }
+
+  // Opens the real site in a new tab, logged in as usual, so Premium and
+  // ad-free playback carry over normally, and native fullscreen is a click
+  // or a tap away on the real player, something a local file cannot fake.
+  function openItem(item) {
+    let url = item.url;
+    if (item.platform === "youtube") {
+      url += (url.includes("?") ? "&" : "?") + "autoplay=1";
+    }
+    window.open(url, "_blank", "noopener");
+  }
+
+  // ---------------------------------------------------------------
+  // RENDER
+  // ---------------------------------------------------------------
+  const grid = document.getElementById("grid");
+  const emptyState = document.getElementById("emptyState");
+  const countLabel = document.getElementById("countLabel");
+  const searchInput = document.getElementById("searchInput");
+
+  function render() {
+    const query = searchInput.value.trim().toLowerCase();
+    let list = items;
+    if (activeFilter !== "all") list = list.filter((i) => i.platform === activeFilter);
+    if (query) {
+      list = list.filter((i) =>
+        (i.title || "").toLowerCase().includes(query) ||
+        (i.domain || "").toLowerCase().includes(query) ||
+        (i.note || "").toLowerCase().includes(query)
+      );
+    }
+
+    countLabel.textContent = items.length + (items.length === 1 ? " link" : " links");
+    grid.innerHTML = "";
+
+    if (list.length === 0) {
+      emptyState.style.display = "block";
+      return;
+    }
+    emptyState.style.display = "none";
+
+    list.forEach((item) => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const thumbWrap = document.createElement("div");
+      thumbWrap.className = "thumb-wrap";
+      thumbWrap.title = "Open, logged in, ad-free if you have Premium";
+      thumbWrap.onclick = () => openItem(item);
+
+      const playBadge = `
+        <div class="play-badge">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="11" fill="rgba(20,19,15,0.55)"/><path d="M10 8l6 4-6 4V8z" fill="white"/></svg>
+        </div>`;
+
+      if (item.platform === "youtube") {
+        thumbWrap.innerHTML = `<img src="${item.thumbnail}" onerror="this.style.display='none'">${playBadge}`;
+      } else if (item.platform === "instagram") {
+        if (item.hasRealImage) {
+          thumbWrap.innerHTML = `<img src="${item.thumbnail}" onerror="this.parentElement.innerHTML='<div class=&quot;thumb-fallback&quot; style=&quot;background:linear-gradient(135deg,#3c1a4d,#a0296b,#e0793a); color:#fff; font-size:15px; letter-spacing:1px;&quot;>INSTAGRAM</div>'">${playBadge}`;
+        } else {
+          thumbWrap.innerHTML = `<div class="thumb-fallback" style="background:linear-gradient(135deg,#3c1a4d,#a0296b,#e0793a); color:#fff; font-size:15px; letter-spacing:1px;">INSTAGRAM</div>${playBadge}`;
+        }
+      } else if (item.hasRealImage) {
+        thumbWrap.innerHTML = `<img src="${item.thumbnail}" onerror="this.style.display='none'">`;
+      } else {
+        thumbWrap.innerHTML = `
+          <div class="thumb-fallback">${(item.domain || "?")[0].toUpperCase()}</div>
+          <img src="${item.thumbnail}" style="position:absolute; top:14px; left:14px; width:28px; height:28px; border-radius:6px; object-fit:contain; background:var(--surface);" onerror="this.style.display='none'">`;
+      }
+
+      const body = document.createElement("div");
+      body.className = "card-body";
+      body.title = "Open, logged in";
+      body.onclick = () => openItem(item);
+      body.innerHTML = `
+        <div class="card-title">${escapeHtml(item.title)}</div>
+        <div class="card-domain">${escapeHtml(item.domain)}</div>
+        ${item.note ? `<div class="card-note">${escapeHtml(item.note)}</div>` : ""}
+      `;
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      actions.innerHTML = `<button title="Add a note" class="editBtn">&#9998;</button><button title="Remove" class="removeBtn">&times;</button>`;
+      actions.querySelector(".editBtn").onclick = (e) => {
+        e.stopPropagation();
+        openModal(item);
+      };
+      actions.querySelector(".removeBtn").onclick = (e) => {
+        e.stopPropagation();
+        removeItem(item.id);
+      };
+
+      card.appendChild(thumbWrap);
+      card.appendChild(body);
+      card.appendChild(actions);
+      grid.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+  }
+
+  // ---------------------------------------------------------------
+  // MODAL / PLAYER
+  // ---------------------------------------------------------------
+  const modalOverlay = document.getElementById("modalOverlay");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalDomain = document.getElementById("modalDomain");
+  const modalNote = document.getElementById("modalNote");
+  const modalThumb = document.getElementById("modalThumb");
+  const modalSave = document.getElementById("modalSave");
+  const modalPlay = document.getElementById("modalPlay");
+  let currentItem = null;
+
+  function openModal(item) {
+    currentItem = item;
+    modalTitle.textContent = item.title;
+    modalDomain.textContent = item.domain;
+    modalNote.value = item.note || "";
+    modalThumb.value = item.hasRealImage ? item.thumbnail : "";
+    modalOverlay.classList.add("open");
+  }
+
+  document.getElementById("modalClose").onclick = closeModal;
+  modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModal(); };
+
+  function closeModal() {
+    modalOverlay.classList.remove("open");
+    currentItem = null;
+  }
+
+  modalPlay.onclick = () => { if (currentItem) openItem(currentItem); };
+
+  modalSave.onclick = () => {
+    if (currentItem) {
+      const patch = { note: modalNote.value };
+      const thumbVal = modalThumb.value.trim();
+      if (thumbVal) {
+        patch.thumbnail = thumbVal;
+        patch.hasRealImage = true;
+      }
+      updateItem(currentItem.id, patch);
+    }
+    closeModal();
+  };
+
+  // ---------------------------------------------------------------
+  // ADD LINK
+  // ---------------------------------------------------------------
+  const urlInput = document.getElementById("urlInput");
+  const addBtn = document.getElementById("addBtn");
+  const addPreview = document.getElementById("addPreview");
+  let previewTimer = null;
+
+  document.getElementById("addBtn").onclick = submitAdd;
+  urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submitAdd(); });
+  urlInput.addEventListener("input", () => {
+    clearTimeout(previewTimer);
+    const val = urlInput.value.trim();
+    if (!val) { addPreview.style.display = "none"; return; }
+    previewTimer = setTimeout(() => showPreview(val), 500);
+  });
+
+  async function showPreview(val) {
+    addPreview.style.display = "block";
+    addPreview.textContent = "Looking up the title";
+    let url = val;
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    const ytId = getYouTubeId(url);
+    const meta = await fetchMeta(url, ytId);
+    if (urlInput.value.trim() !== val) return;
+    addPreview.textContent = meta.title
+      ? `Will save as: ${meta.title}`
+      : `Will save as: ${getDomain(url)} (no title found, you can rename it after saving)`;
+  }
+
+  async function submitAdd() {
+    const val = urlInput.value.trim();
+    if (!val) return;
+    addBtn.disabled = true;
+    addBtn.textContent = "Saving";
+    const entry = await buildEntry(val);
+    await addItem(entry);
+    urlInput.value = "";
+    addPreview.style.display = "none";
+    addBtn.disabled = false;
+    addBtn.textContent = "Save";
+  }
+
+  // Pre-fill and auto-save from the quick-save button (bookmarklet). If it
+  // already captured a title and thumbnail from the live, logged-in page,
+  // use those directly rather than trying to fetch them again, since a
+  // second, unauthenticated fetch is exactly what fails on Instagram.
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("url")) {
+    const paramUrl = params.get("url");
+    const paramTitle = params.get("title");
+    const paramThumb = params.get("thumb");
+    urlInput.value = paramUrl;
+    if (paramThumb) {
+      const ytId = getYouTubeId(paramUrl);
+      const isInstagram = getInstagramLink(paramUrl);
+      addItem({
+        url: paramUrl,
+        title: paramTitle || getDomain(paramUrl),
+        domain: getDomain(paramUrl),
+        type: (ytId || isInstagram) ? "video" : "other",
+        platform: ytId ? "youtube" : (isInstagram ? "instagram" : "other"),
+        youtubeId: ytId || null,
+        thumbnail: paramThumb,
+        hasRealImage: true,
+        note: ""
+      });
+      urlInput.value = "";
+    } else {
+      submitAdd();
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // SEARCH AND FILTER
+  // ---------------------------------------------------------------
+  searchInput.addEventListener("input", render);
+  document.querySelectorAll(".filter-tab").forEach((tab) => {
+    tab.onclick = () => {
+      document.querySelectorAll(".filter-tab").forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      activeFilter = tab.dataset.filter;
+      render();
+    };
+  });
+
+  // ---------------------------------------------------------------
+  // IMPORT SAFARI BOOKMARKS
+  // ---------------------------------------------------------------
+  const importBtn = document.getElementById("importBtn");
+  const importInput = document.getElementById("importInput");
+
+  importBtn.onclick = () => importInput.click();
+
+  importInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, "text/html");
+    const anchors = Array.from(doc.querySelectorAll("a[href]")).filter((a) => {
+      const href = a.getAttribute("href");
+      return href && /^https?:\/\//i.test(href);
+    });
+    importInput.value = "";
+
+    if (anchors.length === 0) {
+      alert("No bookmarks found in that file.");
+      return;
+    }
+
+    importBtn.disabled = true;
+    let done = 0;
+    const total = anchors.length;
+    importBtn.textContent = `Importing 0 / ${total}`;
+
+    let index = 0;
+    async function worker() {
+      while (index < anchors.length) {
+        const a = anchors[index++];
+        const url = a.getAttribute("href");
+        const fallbackTitle = a.textContent.trim();
+        try {
+          const entry = await buildEntry(url, fallbackTitle);
+          await addItem(entry);
+        } catch {}
+        done++;
+        importBtn.textContent = `Importing ${done} / ${total}`;
+      }
+    }
+
+    // A handful of links fetch at once, fast enough for a normal bookmark
+    // list without hammering the lookup service all at once.
+    await Promise.all([worker(), worker(), worker(), worker(), worker()]);
+
+    importBtn.disabled = false;
+    importBtn.textContent = "Import Safari bookmarks";
+    alert(`Imported ${total} bookmarks, with real titles and thumbnails fetched where available.`);
+  });
+
+  document.getElementById("deleteAllBtn").onclick = async () => {
+    if (items.length === 0) return;
+    const sure = confirm(`Delete all ${items.length} saved links? This cannot be undone.`);
+    if (!sure) return;
+    if (useFirebase) {
+      await Promise.all(items.map((i) => deleteDoc(doc(db, "bookmarks", i.id))));
+    } else {
+      items = [];
+      persistLocal();
+      render();
+    }
+  };
+
+  // ---------------------------------------------------------------
+  // QUICK-SAVE BOOKMARKLET
+  // ---------------------------------------------------------------
+  document.getElementById("bookmarkletBtn").onclick = () => {
+    const vaultUrl = window.location.href.split("?")[0];
+    const code = `javascript:(function(){var thumb='';try{var v=document.querySelector('video');if(v&&v.videoWidth){var c=document.createElement('canvas');var scale=Math.min(1,480/v.videoWidth);c.width=v.videoWidth*scale;c.height=v.videoHeight*scale;c.getContext('2d').drawImage(v,0,0,c.width,c.height);thumb=c.toDataURL('image/jpeg',0.7);}}catch(e){}if(!thumb){var m=document.querySelector('meta[property="og:image"]');var img=document.querySelector('article img')||document.querySelector('img');thumb=(m&&m.content)||(img&&img.src)||'';}var t=document.querySelector('meta[property="og:title"]');var title=(t&&t.content)||document.title||'';window.open('${vaultUrl}?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(title)+'&thumb='+encodeURIComponent(thumb),'_blank');})();`;
+    prompt(
+      "Drag this into your Safari bookmarks bar, or create a new bookmark and paste this as the address. On a video or reel, it grabs an actual frame from what is currently playing, so it works even when Instagram blocks the usual preview data.",
+      code
+    );
+  };
+</script>
+</body>
+</html>

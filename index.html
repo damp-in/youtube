@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<meta name="theme-color" content="#14130f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vault">
 <title>Vault</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -271,6 +276,25 @@
   .thumb-wrap:hover .play-badge { background: rgba(0,0,0,0.25); }
   .thumb-wrap:hover .play-badge svg { opacity: 1; }
 
+  .thumb-wrap.inactive img,
+  .thumb-wrap.inactive .thumb-fallback {
+    filter: grayscale(1) brightness(0.55);
+  }
+
+  .inactive-badge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,9,6,0.35);
+    color: #f2ede0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+
   .card-body {
     padding: 13px 14px 14px 14px;
     display: flex;
@@ -425,23 +449,191 @@
   ::-webkit-scrollbar { width: 10px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+  /* ---------- sync status ---------- */
+  .sync-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-left: 10px;
+    white-space: nowrap;
+  }
+
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .sync-status.synced .sync-dot { background: #7fbf6a; }
+  .sync-status.saving .sync-dot { background: var(--accent); animation: pulse 1s infinite ease-in-out; }
+  .sync-status.offline .sync-dot { background: var(--muted); }
+  .sync-status.error .sync-dot { background: var(--danger); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ---------- toast ---------- */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 26px;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.2s ease;
+  }
+
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ---------- auto-fetched description ---------- */
+  .card-description {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    opacity: 0.85;
+  }
+
+  .modal-description {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 10px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .modal-description-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    opacity: 0.7;
+    margin-top: 14px;
+  }
+
+  /* ---------- sort control ---------- */
+  .sort-select {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 10px;
+    border-radius: 100px;
+    font-size: 12.5px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    margin-left: auto;
+  }
+
+  /* ---------- touch devices: no hover, so keep actions reachable ---------- */
+  @media (pointer: coarse) {
+    .card-actions { opacity: 1; }
+    .card-actions button { width: 32px; height: 32px; }
+  }
+
+  /* ---------- mobile layout ---------- */
+  @media (max-width: 640px) {
+    header {
+      padding: calc(16px + env(safe-area-inset-top)) 16px 14px 16px;
+    }
+
+    .header-top {
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .title { font-size: 22px; }
+
+    .header-actions {
+      flex-wrap: wrap;
+      width: 100%;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 8px;
+      font-size: 12.5px;
+      text-align: center;
+    }
+
+    .add-form {
+      flex-direction: column;
+    }
+
+    .add-form button {
+      padding: 12px;
+    }
+
+    main {
+      padding: 0 14px;
+      margin: 20px auto 60px auto;
+    }
+
+    .grid {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .filter-tabs {
+      flex-wrap: wrap;
+    }
+
+    .modal-overlay { padding: 0; }
+
+    .modal {
+      max-width: 100%;
+      width: 100%;
+      height: 100%;
+      max-height: 100dvh;
+      border-radius: 0;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
 </style>
 </head>
 <body>
 
 <header>
   <div class="header-top">
-    <div class="title">Vault<span id="countLabel">0 links</span></div>
+    <div class="title">Vault<span id="countLabel">0 links</span><span class="sync-status" id="syncStatus"><span class="sync-dot"></span><span id="syncLabel">Loading</span></span></div>
     <div class="header-actions">
       <button class="icon-btn" id="importBtn">Import Safari bookmarks</button>
+      <button class="icon-btn" id="backupBtn">Download backup</button>
+      <button class="icon-btn" id="recheckBtn">Recheck links</button>
       <button class="icon-btn" id="bookmarkletBtn">Get quick-save button</button>
-      <button class="icon-btn" id="deleteAllBtn" style="color:var(--danger); border-color:rgba(217,119,106,0.35);">Delete all</button>
     </div>
   </div>
   <div class="search-row">
     <div class="search-box">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Search your links">
+      <input type="text" id="searchInput" placeholder="Search your links (press / to focus)">
     </div>
   </div>
   <div class="add-form">
@@ -456,9 +648,14 @@
 
   <div class="filter-tabs">
     <button class="filter-tab active" data-filter="all">All</button>
-    <button class="filter-tab" data-filter="youtube">YouTube</button>
-    <button class="filter-tab" data-filter="instagram">Instagram</button>
+    <button class="filter-tab" data-filter="video">Videos</button>
     <button class="filter-tab" data-filter="other">Pages</button>
+    <button class="filter-tab" data-filter="inactive">Inactive</button>
+    <select class="sort-select" id="sortSelect">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="title">Title A–Z</option>
+    </select>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -469,6 +666,8 @@
   </div>
 </main>
 
+<div class="toast" id="toast"></div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-info">
@@ -477,11 +676,20 @@
         <button class="modal-close" id="modalClose">&times;</button>
       </div>
       <div class="card-domain" id="modalDomain"></div>
+      <div class="modal-description-label" id="modalDescLabel" style="display:none;">Description</div>
+      <div class="modal-description" id="modalDescription"></div>
       <textarea id="modalNote" placeholder="Add a note" style="width:100%; margin-top:12px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px; font-family:'Inter',sans-serif; font-size:13px; min-height:60px; resize:vertical;"></textarea>
       <input type="text" id="modalThumb" placeholder="Paste an image URL to set the thumbnail manually" style="width:100%; margin-top:8px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px; font-family:'JetBrains Mono',monospace; font-size:12px;">
+      <div id="pasteZone" tabindex="0" style="margin-top:8px; border:1px dashed var(--border); border-radius:8px; padding:14px; text-align:center; font-size:12px; color:var(--muted); cursor:text;">
+        Take a screenshot (Cmd+Shift+4 on a Mac), click here, then press Cmd+V to embed it as the thumbnail
+        <img id="pastePreview" style="display:none; max-width:100%; margin-top:10px; border-radius:6px;">
+      </div>
       <div class="modal-row">
         <button class="icon-btn" id="modalPlay">Open link</button>
-        <button class="icon-btn" id="modalSave">Save note</button>
+        <div style="display:flex; gap:8px;">
+          <button class="icon-btn" id="modalCopy">Copy link</button>
+          <button class="icon-btn" id="modalSave">Save note</button>
+        </div>
       </div>
     </div>
   </div>
@@ -490,6 +698,35 @@
 <input type="file" id="importInput" accept=".html">
 
 <script type="module">
+  // ---------------------------------------------------------------
+  // TOAST — small transient feedback, used mainly for save failures
+  // ---------------------------------------------------------------
+  const toastEl = document.getElementById("toast");
+  let toastTimer = null;
+  function showToast(msg, isError) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.classList.toggle("error", !!isError);
+    toastEl.classList.add("show");
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 3200);
+  }
+
+  // ---------------------------------------------------------------
+  // SYNC STATUS — a small dot + label next to the item count so it is
+  // always obvious whether a bookmark actually made it to Firebase,
+  // is still in flight, or the app is offline and holding it locally
+  // until the connection comes back.
+  // ---------------------------------------------------------------
+  const syncStatusEl = document.getElementById("syncStatus");
+  const syncLabelEl = document.getElementById("syncLabel");
+  function setSyncStatus(mode, label) {
+    syncStatusEl.className = "sync-status " + mode;
+    syncLabelEl.textContent = label;
+  }
+
+  window.addEventListener("offline", () => setSyncStatus("offline", "Offline — will sync"));
+  window.addEventListener("online", () => setSyncStatus("saving", "Reconnecting"));
+
   // ---------------------------------------------------------------
   // FIREBASE SETUP
   // Create a free project at https://console.firebase.google.com
@@ -512,12 +749,37 @@
 
   let items = [];
   let activeFilter = "all";
+  let sortMode = "newest";
+
+  // Regardless of Firebase, every snapshot is also mirrored into
+  // localStorage. This is a pure safety net: if Firestore is ever
+  // unreachable on load (e.g. no persistence support in this browser,
+  // first load with no network at all), the vault still opens showing
+  // the last known-good copy instead of an empty screen, and a manual
+  // "Download backup" button lets you save a JSON copy off-device too.
+  function mirrorToLocalBackup() {
+    try { localStorage.setItem("vault_items_backup", JSON.stringify(items)); } catch {}
+  }
 
   if (useFirebase) {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
     const fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
     const app = initializeApp(firebaseConfig);
-    db = fs.getFirestore(app);
+
+    // Persistent offline cache (IndexedDB-backed): bookmarks saved while
+    // offline are queued on-device and survive closing the tab, then
+    // sync automatically the moment the connection returns, instead of
+    // being lost if the tab closes before reconnecting. Falls back to
+    // the plain in-memory client if persistence isn't available (e.g.
+    // private browsing, or the vault open in several tabs at once).
+    try {
+      db = fs.initializeFirestore(app, {
+        localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() })
+      });
+    } catch {
+      db = fs.getFirestore(app);
+    }
+
     collectionRef = fs.collection(db, "bookmarks");
     onSnapshot = fs.onSnapshot;
     addDoc = fs.addDoc;
@@ -525,26 +787,73 @@
     doc = fs.doc;
     updateDoc = fs.updateDoc;
 
-    onSnapshot(collectionRef, (snap) => {
-      items = [];
-      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
-      items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      render();
-    });
+    setSyncStatus("saving", "Connecting");
+    let didInitialSweep = false;
+
+    onSnapshot(
+      collectionRef,
+      { includeMetadataChanges: true },
+      (snap) => {
+        items = [];
+        snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+        items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        mirrorToLocalBackup();
+        render();
+
+        if (!navigator.onLine) {
+          setSyncStatus("offline", "Offline — will sync");
+        } else if (snap.metadata.hasPendingWrites) {
+          setSyncStatus("saving", "Saving…");
+        } else if (snap.metadata.fromCache) {
+          setSyncStatus("offline", "Offline — showing local copy");
+        } else {
+          setSyncStatus("synced", "Synced");
+        }
+
+        // Once, shortly after the vault first loads, quietly check any
+        // YouTube/Instagram link that has never been checked before —
+        // covers links added before this feature existed, or ones the
+        // in-flight metadata fetch couldn't confirm either way.
+        if (!didInitialSweep && !snap.metadata.fromCache) {
+          didInitialSweep = true;
+          setTimeout(() => sweepLinkStatuses(false), 1500);
+        }
+      },
+      (err) => {
+        console.error("Firestore sync error:", err);
+        setSyncStatus("error", "Sync error");
+        showToast("Lost connection to the sync database — your links are safe locally.", true);
+        // Fall back to whatever was last mirrored so the vault isn't empty.
+        if (items.length === 0) {
+          items = JSON.parse(localStorage.getItem("vault_items_backup") || "[]");
+          render();
+        }
+      }
+    );
   } else {
     document.getElementById("localBanner").classList.add("show");
+    setSyncStatus("offline", "Local only");
     items = JSON.parse(localStorage.getItem("vault_items") || "[]");
     render();
+    setTimeout(() => sweepLinkStatuses(false), 1500);
   }
 
   function persistLocal() {
     localStorage.setItem("vault_items", JSON.stringify(items));
+    mirrorToLocalBackup();
   }
 
   async function addItem(data) {
     data.createdAt = Date.now();
     if (useFirebase) {
-      await addDoc(collectionRef, data);
+      try {
+        await addDoc(collectionRef, data);
+      } catch (err) {
+        console.error("Failed to save bookmark:", err);
+        showToast("Couldn't save that link — check your connection and try again.", true);
+        setSyncStatus("error", "Sync error");
+        throw err;
+      }
     } else {
       data.id = "local_" + Date.now() + "_" + Math.random().toString(36).slice(2);
       items.unshift(data);
@@ -555,7 +864,12 @@
 
   async function removeItem(id) {
     if (useFirebase) {
-      await deleteDoc(doc(db, "bookmarks", id));
+      try {
+        await deleteDoc(doc(db, "bookmarks", id));
+      } catch (err) {
+        console.error("Failed to remove bookmark:", err);
+        showToast("Couldn't remove that link — check your connection and try again.", true);
+      }
     } else {
       items = items.filter((i) => i.id !== id);
       persistLocal();
@@ -565,7 +879,12 @@
 
   async function updateItem(id, patch) {
     if (useFirebase) {
-      await updateDoc(doc(db, "bookmarks", id), patch);
+      try {
+        await updateDoc(doc(db, "bookmarks", id), patch);
+      } catch (err) {
+        console.error("Failed to update bookmark:", err);
+        showToast("Couldn't save that change — check your connection and try again.", true);
+      }
     } else {
       const item = items.find((i) => i.id === id);
       if (item) Object.assign(item, patch);
@@ -573,6 +892,7 @@
       render();
     }
   }
+
 
   // ---------------------------------------------------------------
   // LINK PARSING HELPERS
@@ -613,15 +933,21 @@
     const imageMatch =
       html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']*)["']/i) ||
       html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:image["']/i);
+    const descMatch =
+      html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:description["']/i) ||
+      html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i);
     const plainTitleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
 
     let title = titleMatch ? decodeEntities(titleMatch[1]) : (plainTitleMatch ? decodeEntities(plainTitleMatch[1]) : null);
     let image = imageMatch ? imageMatch[1] : null;
+    let description = descMatch ? decodeEntities(descMatch[1]) : null;
 
     // Instagram, and some other sites, strip the meta tags for non-browser
     // requests but still leave the same data inside a structured data
     // script block meant for search engines, so check there next.
-    if (!image || !title) {
+    if (!image || !title || !description) {
       const ldBlocks = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
       for (const block of ldBlocks) {
         try {
@@ -634,12 +960,15 @@
           if (!title && (entry.headline || entry.name || entry.caption)) {
             title = entry.headline || entry.name || entry.caption;
           }
+          if (!description && (entry.description || entry.caption || entry.articleBody)) {
+            description = entry.description || entry.caption || entry.articleBody;
+          }
         } catch {}
-        if (image && title) break;
+        if (image && title && description) break;
       }
     }
 
-    return { title, image };
+    return { title, image, description };
   }
 
   // Tries a few different public proxy sources in order, since any single
@@ -666,14 +995,70 @@
     return null;
   }
 
-  // Fetches a title and a thumbnail without any manual typing. YouTube's own
-  // oEmbed endpoint is reliable and official. For Instagram and everything
-  // else, this reads the page's Open Graph tags, the same preview data a
-  // site shows when shared on social media, falling back to structured data
-  // if the tags themselves are stripped. Instagram can still block this for
-  // private accounts or under heavy traffic, in that case the link still
-  // saves fine with a plain title.
+  // Microlink runs a real headless browser server-side and returns JSON
+  // with permissive CORS, so it succeeds on pages that block a plain
+  // fetch of the raw HTML (which is exactly what Instagram does to the
+  // proxies above — it serves them a login wall with no og:tags at all).
+  // Used as the second attempt, after the cheap direct scrape, and also
+  // to fill in the caption/description for YouTube, since YouTube's own
+  // oEmbed endpoint only gives a title, never the description.
+  async function fetchMicrolinkMeta(url) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 9000);
+      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}&audio=false&video=false&iframe=false`, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) return { title: null, image: null, description: null };
+      const json = await res.json();
+      const data = json && json.data;
+      if (!data) return { title: null, image: null, description: null };
+      return {
+        title: data.title || null,
+        image: (data.image && data.image.url) || null,
+        description: data.description || null
+      };
+    } catch { return { title: null, image: null, description: null }; }
+  }
+
+  // Last resort when nothing above produces an image: ask Microlink to
+  // screenshot the rendered page and hand back a hosted image URL. This
+  // doesn't depend on meta tags existing at all, so it works "no matter
+  // what" as long as the page itself renders something visually (it will
+  // still show a login wall for private accounts, but that's a real
+  // picture of the link rather than a blank tile).
+  async function fetchScreenshot(url) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&waitUntil=networkidle2`, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) return null;
+      const json = await res.json();
+      const shot = json && json.data && json.data.screenshot;
+      return (shot && shot.url) || null;
+    } catch { return null; }
+  }
+
+  // Fetches a title, thumbnail, and description without any manual typing.
+  // YouTube's own oEmbed endpoint is reliable and official for title and
+  // thumbnail. For everything else this reads the page's Open Graph tags
+  // first (the same preview data a site shows when shared on social
+  // media), falling back to structured data if the tags themselves are
+  // stripped.
+  //
+  // Instagram deliberately serves bots a login wall with none of that data,
+  // so for Instagram links this skips straight to Microlink's headless
+  // render (attempt 2), and if that still has no image, to a raw screenshot
+  // of the page (attempt 3) — so a thumbnail always shows up, even when
+  // Instagram blocks every normal method. The caption Instagram shows on
+  // the post, and the description YouTube shows under a video, both come
+  // back the same way, as "description".
   async function fetchMeta(url, ytId) {
+    let title = null;
+    let image = null;
+    let description = null;
+    let deadYoutube = false;
+
     if (ytId) {
       try {
         const controller = new AbortController();
@@ -682,16 +1067,45 @@
         clearTimeout(timer);
         if (res.ok) {
           const json = await res.json();
-          return { title: json.title, thumbnail: json.thumbnail_url };
+          title = json.title;
+          image = json.thumbnail_url;
+        } else if (res.status === 401 || res.status === 404) {
+          // YouTube's oEmbed returns 401/404 when a video has been
+          // removed, made private, or never existed — a reliable signal
+          // this link is dead, used to file it under the Inactive tab.
+          deadYoutube = true;
         }
       } catch {}
-      return { title: null, thumbnail: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` };
+      if (!image) image = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    } else {
+      const isInstagram = getInstagramLink(url);
+      if (!isInstagram) {
+        const html = await fetchPageHtml(url);
+        if (html) {
+          const og = extractOpenGraph(html);
+          title = og.title;
+          image = og.image;
+          description = og.description;
+        }
+      }
     }
 
-    const html = await fetchPageHtml(url);
-    if (!html) return { title: null, thumbnail: null };
-    const og = extractOpenGraph(html);
-    return { title: og.title, thumbnail: og.image };
+    // Microlink fills any gap left above: the image and title for
+    // Instagram (which skipped the direct scrape entirely), or just the
+    // description for YouTube and any site whose og:description was
+    // missing or blocked.
+    if (!title || !image || !description) {
+      const mick = await fetchMicrolinkMeta(url);
+      title = title || mick.title;
+      image = image || mick.image;
+      description = description || mick.description;
+    }
+
+    if (!image) {
+      image = await fetchScreenshot(url);
+    }
+
+    return { title, thumbnail: image, description, deadYoutube };
   }
 
   async function buildEntry(rawUrl, fallbackTitle) {
@@ -711,9 +1125,92 @@
       youtubeId: ytId || null,
       thumbnail: meta.thumbnail || `https://www.google.com/s2/favicons?sz=128&domain=${getDomain(url)}`,
       hasRealImage: !!meta.thumbnail,
+      description: meta.description || "",
+      status: meta.deadYoutube ? "inactive" : "active",
+      lastChecked: Date.now(),
       note: ""
     };
   }
+
+  // ---------------------------------------------------------------
+  // DEAD-LINK DETECTION
+  // Checks whether a saved YouTube or Instagram link still resolves to
+  // real content. Only these two platforms are checked: YouTube gives a
+  // clean 401/404 through oEmbed when a video is gone, and Instagram
+  // reliably swaps in its generic "content isn't available" page, which
+  // Microlink's rendered title/description exposes. Plain web pages
+  // ("Pages" tab) are left alone — there's no equally reliable, low-cost
+  // way to tell "moved" from "gone" from "still there but slow" for an
+  // arbitrary site, and false positives here would bury a fine bookmark.
+  // Returns "active", "inactive", or null (couldn't tell — transient
+  // network issue — so the existing status is left as-is).
+  // ---------------------------------------------------------------
+  async function checkLinkStatus(item) {
+    if (item.platform === "youtube") {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 7000);
+        const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(item.url)}&format=json`, { signal: controller.signal });
+        clearTimeout(timer);
+        if (res.status === 401 || res.status === 404) return "inactive";
+        if (res.ok) return "active";
+        return null;
+      } catch { return null; }
+    }
+
+    if (item.platform === "instagram") {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 9000);
+        const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(item.url)}&audio=false&video=false&iframe=false`, { signal: controller.signal });
+        clearTimeout(timer);
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (json.status !== "success") return "inactive";
+        const t = ((json.data && json.data.title) || "").toLowerCase();
+        const d = ((json.data && json.data.description) || "").toLowerCase();
+        const deadPhrases = ["page isn't available", "page not found", "content isn't available", "sorry, this page"];
+        if (deadPhrases.some((p) => t.includes(p) || d.includes(p))) return "inactive";
+        if (t === "instagram" && !d) return "inactive";
+        return "active";
+      } catch { return null; }
+    }
+
+    return null;
+  }
+
+  // Sweeps saved YouTube/Instagram links and files any that are gone
+  // under the Inactive tab. force=false (used automatically once after
+  // load) only checks links that have never been checked, to stay
+  // gentle on the free Microlink quota; the "Recheck links" button
+  // passes force=true to re-verify everything on demand.
+  let sweepRunning = false;
+  async function sweepLinkStatuses(force) {
+    if (sweepRunning) { showToast("Already checking links…"); return; }
+    const targets = items.filter((i) =>
+      (i.platform === "youtube" || i.platform === "instagram") && (force || !i.lastChecked)
+    );
+    if (targets.length === 0) {
+      if (force) showToast("Nothing to recheck.");
+      return;
+    }
+    sweepRunning = true;
+    if (force) showToast(`Checking ${targets.length} link${targets.length === 1 ? "" : "s"}…`);
+    let changed = 0;
+    for (const item of targets) {
+      const status = await checkLinkStatus(item);
+      if (status) {
+        if (status !== item.status) changed++;
+        updateItem(item.id, { status, lastChecked: Date.now() }).catch(() => {});
+      } else {
+        updateItem(item.id, { lastChecked: Date.now() }).catch(() => {});
+      }
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    sweepRunning = false;
+    if (force) showToast(`Checked ${targets.length} link${targets.length === 1 ? "" : "s"}${changed ? `, moved ${changed} to Inactive` : ""}.`);
+  }
+
 
   // Opens the real site in a new tab, logged in as usual, so Premium and
   // ad-free playback carry over normally, and native fullscreen is a click
@@ -736,15 +1233,33 @@
 
   function render() {
     const query = searchInput.value.trim().toLowerCase();
-    let list = items;
-    if (activeFilter !== "all") list = list.filter((i) => i.platform === activeFilter);
+    let list = [...items];
+    if (activeFilter === "inactive") {
+      list = list.filter((i) => i.status === "inactive");
+    } else {
+      // Dead links never show in All/Videos/Pages — that's the whole
+      // point of the Inactive tab, so they don't clutter browsing.
+      list = list.filter((i) => i.status !== "inactive");
+      if (activeFilter !== "all") list = list.filter((i) => i.type === activeFilter);
+    }
     if (query) {
       list = list.filter((i) =>
         (i.title || "").toLowerCase().includes(query) ||
         (i.domain || "").toLowerCase().includes(query) ||
-        (i.note || "").toLowerCase().includes(query)
+        (i.note || "").toLowerCase().includes(query) ||
+        (i.description || "").toLowerCase().includes(query)
       );
     }
+    if (sortMode === "oldest") {
+      list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    } else if (sortMode === "title") {
+      list.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+    }
+    // "newest" needs no re-sort: items already arrives newest-first.
+
+    const inactiveCount = items.filter((i) => i.status === "inactive").length;
+    const inactiveTab = document.querySelector('.filter-tab[data-filter="inactive"]');
+    if (inactiveTab) inactiveTab.textContent = inactiveCount ? `Inactive (${inactiveCount})` : "Inactive";
 
     countLabel.textContent = items.length + (items.length === 1 ? " link" : " links");
     grid.innerHTML = "";
@@ -756,12 +1271,13 @@
     emptyState.style.display = "none";
 
     list.forEach((item) => {
+      const isInactive = item.status === "inactive";
       const card = document.createElement("div");
       card.className = "card";
 
       const thumbWrap = document.createElement("div");
-      thumbWrap.className = "thumb-wrap";
-      thumbWrap.title = "Open, logged in, ad-free if you have Premium";
+      thumbWrap.className = "thumb-wrap" + (isInactive ? " inactive" : "");
+      thumbWrap.title = isInactive ? "This link no longer resolves" : "Open, logged in, ad-free if you have Premium";
       thumbWrap.onclick = () => openItem(item);
 
       const playBadge = `
@@ -785,6 +1301,10 @@
           <img src="${item.thumbnail}" style="position:absolute; top:14px; left:14px; width:28px; height:28px; border-radius:6px; object-fit:contain; background:var(--surface);" onerror="this.style.display='none'">`;
       }
 
+      if (isInactive) {
+        thumbWrap.innerHTML += `<div class="inactive-badge">Unavailable</div>`;
+      }
+
       const body = document.createElement("div");
       body.className = "card-body";
       body.title = "Open, logged in";
@@ -792,12 +1312,32 @@
       body.innerHTML = `
         <div class="card-title">${escapeHtml(item.title)}</div>
         <div class="card-domain">${escapeHtml(item.domain)}</div>
+        ${item.description ? `<div class="card-description">${escapeHtml(item.description)}</div>` : ""}
         ${item.note ? `<div class="card-note">${escapeHtml(item.note)}</div>` : ""}
       `;
 
       const actions = document.createElement("div");
       actions.className = "card-actions";
-      actions.innerHTML = `<button title="Add a note" class="editBtn">&#9998;</button><button title="Remove" class="removeBtn">&times;</button>`;
+      actions.innerHTML = `<button title="Copy link" class="copyBtn">&#128279;</button>${isInactive ? '<button title="Check again" class="recheckOneBtn">&#8635;</button>' : ""}<button title="Add a note" class="editBtn">&#9998;</button><button title="Remove" class="removeBtn">&times;</button>`;
+      actions.querySelector(".copyBtn").onclick = (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(item.url).then(
+          () => showToast("Link copied."),
+          () => showToast("Couldn't copy the link.", true)
+        );
+      };
+      if (isInactive) {
+        actions.querySelector(".recheckOneBtn").onclick = async (e) => {
+          e.stopPropagation();
+          const status = await checkLinkStatus(item);
+          if (status) {
+            updateItem(item.id, { status, lastChecked: Date.now() }).catch(() => {});
+            showToast(status === "active" ? "It's back! Moved to active." : "Still unavailable.");
+          } else {
+            showToast("Couldn't check it right now — try again shortly.", true);
+          }
+        };
+      }
       actions.querySelector(".editBtn").onclick = (e) => {
         e.stopPropagation();
         openModal(item);
@@ -830,7 +1370,12 @@
   const modalThumb = document.getElementById("modalThumb");
   const modalSave = document.getElementById("modalSave");
   const modalPlay = document.getElementById("modalPlay");
+  const pasteZone = document.getElementById("pasteZone");
+  const pastePreview = document.getElementById("pastePreview");
+  const modalDescription = document.getElementById("modalDescription");
+  const modalDescLabel = document.getElementById("modalDescLabel");
   let currentItem = null;
+  let pastedImageDataUrl = null;
 
   function openModal(item) {
     currentItem = item;
@@ -838,6 +1383,18 @@
     modalDomain.textContent = item.domain;
     modalNote.value = item.note || "";
     modalThumb.value = item.hasRealImage ? item.thumbnail : "";
+    if (item.description) {
+      modalDescription.textContent = item.description;
+      modalDescLabel.style.display = "block";
+      modalDescription.style.display = "block";
+    } else {
+      modalDescription.textContent = "";
+      modalDescLabel.style.display = "none";
+      modalDescription.style.display = "none";
+    }
+    pastedImageDataUrl = null;
+    pastePreview.style.display = "none";
+    pastePreview.src = "";
     modalOverlay.classList.add("open");
   }
 
@@ -849,15 +1406,46 @@
     currentItem = null;
   }
 
+  pasteZone.addEventListener("paste", (e) => {
+    const items = e.clipboardData ? e.clipboardData.items : [];
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        const blob = item.getAsFile();
+        const reader = new FileReader();
+        reader.onload = () => {
+          pastedImageDataUrl = reader.result;
+          pastePreview.src = pastedImageDataUrl;
+          pastePreview.style.display = "block";
+        };
+        reader.readAsDataURL(blob);
+        e.preventDefault();
+        return;
+      }
+    }
+  });
+
   modalPlay.onclick = () => { if (currentItem) openItem(currentItem); };
+
+  document.getElementById("modalCopy").onclick = () => {
+    if (!currentItem) return;
+    navigator.clipboard.writeText(currentItem.url).then(
+      () => showToast("Link copied."),
+      () => showToast("Couldn't copy the link.", true)
+    );
+  };
 
   modalSave.onclick = () => {
     if (currentItem) {
       const patch = { note: modalNote.value };
-      const thumbVal = modalThumb.value.trim();
-      if (thumbVal) {
-        patch.thumbnail = thumbVal;
+      if (pastedImageDataUrl) {
+        patch.thumbnail = pastedImageDataUrl;
         patch.hasRealImage = true;
+      } else {
+        const thumbVal = modalThumb.value.trim();
+        if (thumbVal) {
+          patch.thumbnail = thumbVal;
+          patch.hasRealImage = true;
+        }
       }
       updateItem(currentItem.id, patch);
     }
@@ -883,10 +1471,12 @@
 
   async function showPreview(val) {
     addPreview.style.display = "block";
-    addPreview.textContent = "Looking up the title";
     let url = val;
     if (!/^https?:\/\//i.test(url)) url = "https://" + url;
     const ytId = getYouTubeId(url);
+    addPreview.textContent = getInstagramLink(url)
+      ? "Looking up the title (Instagram can take a few extra seconds)"
+      : "Looking up the title";
     const meta = await fetchMeta(url, ytId);
     if (urlInput.value.trim() !== val) return;
     addPreview.textContent = meta.title
@@ -899,12 +1489,18 @@
     if (!val) return;
     addBtn.disabled = true;
     addBtn.textContent = "Saving";
-    const entry = await buildEntry(val);
-    await addItem(entry);
-    urlInput.value = "";
-    addPreview.style.display = "none";
-    addBtn.disabled = false;
-    addBtn.textContent = "Save";
+    try {
+      const entry = await buildEntry(val);
+      await addItem(entry);
+      urlInput.value = "";
+      addPreview.style.display = "none";
+    } catch {
+      // addItem already surfaced a toast; leave the input filled in
+      // so nothing typed is lost and the user can just hit Save again.
+    } finally {
+      addBtn.disabled = false;
+      addBtn.textContent = "Save";
+    }
   }
 
   // Pre-fill and auto-save from the quick-save button (bookmarklet). If it
@@ -929,8 +1525,11 @@
         youtubeId: ytId || null,
         thumbnail: paramThumb,
         hasRealImage: true,
+        description: "",
+        status: "active",
+        lastChecked: Date.now(),
         note: ""
-      });
+      }).catch(() => {});
       urlInput.value = "";
     } else {
       submitAdd();
@@ -995,27 +1594,16 @@
       }
     }
 
-    // A handful of links fetch at once, fast enough for a normal bookmark
-    // list without hammering the lookup service all at once.
-    await Promise.all([worker(), worker(), worker(), worker(), worker()]);
+    // Instagram links here go through Microlink's headless render, and
+    // sometimes the screenshot fallback on top of that, both slower than a
+    // plain fetch, so only a few run at once rather than flooding the
+    // lookup service with the whole list simultaneously.
+    await Promise.all([worker(), worker(), worker()]);
 
     importBtn.disabled = false;
     importBtn.textContent = "Import Safari bookmarks";
-    alert(`Imported ${total} bookmarks, with real titles and thumbnails fetched where available.`);
+    alert(`Imported ${total} bookmarks, with real titles and thumbnails fetched the same way a pasted link works.`);
   });
-
-  document.getElementById("deleteAllBtn").onclick = async () => {
-    if (items.length === 0) return;
-    const sure = confirm(`Delete all ${items.length} saved links? This cannot be undone.`);
-    if (!sure) return;
-    if (useFirebase) {
-      await Promise.all(items.map((i) => deleteDoc(doc(db, "bookmarks", i.id))));
-    } else {
-      items = [];
-      persistLocal();
-      render();
-    }
-  };
 
   // ---------------------------------------------------------------
   // QUICK-SAVE BOOKMARKLET
@@ -1028,6 +1616,43 @@
       code
     );
   };
+
+  // ---------------------------------------------------------------
+  // DOWNLOAD BACKUP — a manual, human-readable safety net on top of
+  // Firebase sync, in case you ever want an off-device copy.
+  // ---------------------------------------------------------------
+  document.getElementById("backupBtn").onclick = () => {
+    if (items.length === 0) { showToast("Nothing to back up yet."); return; }
+    const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `vault-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast(`Backed up ${items.length} link${items.length === 1 ? "" : "s"}.`);
+  };
+
+  document.getElementById("recheckBtn").onclick = () => sweepLinkStatuses(true);
+
+  // ---------------------------------------------------------------
+  // SORTING
+  // ---------------------------------------------------------------
+  document.getElementById("sortSelect").addEventListener("change", (e) => {
+    sortMode = e.target.value;
+    render();
+  });
+
+  // ---------------------------------------------------------------
+  // KEYBOARD SHORTCUT — "/" jumps to search, from anywhere except
+  // while already typing in a field.
+  // ---------------------------------------------------------------
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "/") return;
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    e.preventDefault();
+    searchInput.focus();
+  });
 </script>
 </body>
 </html>

@@ -1091,55 +1091,77 @@
   // with permissive CORS, so it succeeds on pages that block a plain
   // fetch of the raw HTML (which is exactly what Instagram does to the
   // proxies above — it serves them a login wall with no og:tags at all).
-  // Used as the second attempt, after the cheap direct scrape, and also
-  // to fill in the caption/description for YouTube, since YouTube's own
-  // oEmbed endpoint only gives a title, never the description.
-  //
-  // This asks for the screenshot in the SAME request as the meta lookup
-  // (screenshot=true alongside the normal meta fields), instead of two
-  // separate round trips. That matters most for Instagram: it's the
-  // slowest, most failure-prone site this app deals with, so cutting it
-  // down to one request instead of two roughly halves the chances of a
-  // timeout or rate limit killing the thumbnail. force=true tells
-  // Microlink to bypass its own result cache and re-render fresh, which
-  // is what a retry actually needs — without it, retrying a link that
-  // failed once just returns the same cached failure every time.
+  // Used to get a title and caption/description for every non-YouTube
+  // link. force=true tells Microlink to bypass its own result cache and
+  // re-render fresh, which is what a retry actually needs — without it,
+  // retrying a link that failed once just returns the same cached
+  // failure every time.
   async function fetchMicrolinkMeta(url, force) {
     try {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 12000);
+      const timer = setTimeout(() => controller.abort(), 10000);
       const forceParam = force ? "&force=true" : "";
-      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}&audio=false&video=false&iframe=false&screenshot=true&waitUntil=networkidle2${forceParam}`, { signal: controller.signal });
+      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}&audio=false&video=false&iframe=false${forceParam}`, { signal: controller.signal });
       clearTimeout(timer);
-      if (!res.ok) return { title: null, image: null, description: null, screenshot: null };
+      if (!res.ok) return { title: null, image: null, description: null };
       const json = await res.json();
       const data = json && json.data;
-      if (!data) return { title: null, image: null, description: null, screenshot: null };
+      if (!data) return { title: null, image: null, description: null };
       return {
         title: data.title || null,
         image: (data.image && data.image.url) || null,
-        description: data.description || null,
-        screenshot: (data.screenshot && data.screenshot.url) || null
+        description: data.description || null
       };
-    } catch { return { title: null, image: null, description: null, screenshot: null }; }
+    } catch { return { title: null, image: null, description: null }; }
   }
 
-  // Last-resort standalone screenshot call, kept for the case where the
-  // combined call above already returned a title/description (so
-  // fetchMicrolinkMeta was never triggered) but still left no image —
-  // e.g. an ordinary page with og:title but no og:image.
+  // Asks Microlink to screenshot the rendered page and hand back a
+  // hosted image URL. This doesn't depend on meta tags existing at all,
+  // so it works "no matter what" as long as the page itself renders
+  // something visually (it will still show a login wall for private
+  // accounts, but that's a real picture of the link rather than a blank
+  // tile).
+  //
+  // Rendering and capturing a full page is by far the slowest thing this
+  // app asks Microlink to do, and it can genuinely take anywhere from a
+  // couple of seconds to the better part of a minute depending on how
+  // busy Microlink's render queue is. Rather than picking one timeout
+  // and giving up if it's wrong, this makes a few patient passes with a
+  // longer budget each time — 20s, then 40s, then 70s — so a link that
+  // just needed more time gets it, instead of being written off after
+  // one unlucky attempt. Every attempt's outcome and how long it took
+  // is logged to the console, so slow or consistently-failing links are
+  // easy to spot. Returns { url, ms } on success (ms is how long the
+  // winning attempt took), or null if every pass came back empty.
   async function fetchScreenshot(url, force) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 18000);
-      const forceParam = force ? "&force=true" : "";
-      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&waitUntil=networkidle2${forceParam}`, { signal: controller.signal });
-      clearTimeout(timer);
-      if (!res.ok) return null;
-      const json = await res.json();
-      const shot = json && json.data && json.data.screenshot;
-      return (shot && shot.url) || null;
-    } catch { return null; }
+    const budgets = [20000, 40000, 70000];
+    for (let i = 0; i < budgets.length; i++) {
+      const start = Date.now();
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), budgets[i]);
+        // Force a fresh render on every pass past the first — a cached
+        // "no screenshot" result would otherwise just repeat itself.
+        const forceParam = (force || i > 0) ? "&force=true" : "";
+        const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&waitUntil=networkidle2${forceParam}`, { signal: controller.signal });
+        clearTimeout(timer);
+        const ms = Date.now() - start;
+        if (res.ok) {
+          const json = await res.json();
+          const shot = json && json.data && json.data.screenshot;
+          if (shot && shot.url) {
+            console.log(`[vault] screenshot succeeded for ${url} on attempt ${i + 1}/${budgets.length} in ${ms}ms`);
+            return { url: shot.url, ms };
+          }
+          console.log(`[vault] screenshot attempt ${i + 1}/${budgets.length} for ${url} returned no image after ${ms}ms`);
+        } else {
+          console.log(`[vault] screenshot attempt ${i + 1}/${budgets.length} for ${url} failed (HTTP ${res.status}) after ${ms}ms`);
+        }
+      } catch (e) {
+        console.log(`[vault] screenshot attempt ${i + 1}/${budgets.length} for ${url} aborted/errored after ${Date.now() - start}ms: ${e && e.message}`);
+      }
+    }
+    return null;
   }
 
   // Fetches a title, thumbnail, and description without any manual typing.
@@ -1149,13 +1171,15 @@
   // media), falling back to structured data if the tags themselves are
   // stripped.
   //
-  // Instagram deliberately serves bots a login wall with none of that data,
-  // so for Instagram links this skips straight to Microlink's headless
-  // render (attempt 2), and if that still has no image, to a raw screenshot
-  // of the page (attempt 3) — so a thumbnail always shows up, even when
-  // Instagram blocks every normal method. The caption Instagram shows on
-  // the post, and the description YouTube shows under a video, both come
-  // back the same way, as "description".
+  // Instagram deliberately serves bots a login wall with none of that
+  // data, so for Instagram this doesn't bother gambling on whatever
+  // image Microlink's meta lookup might happen to find — it goes
+  // straight for an actual screenshot every time, which is slower but
+  // reliably produces a real picture of the post instead of sometimes
+  // getting one and sometimes not. Microlink's meta lookup is still used
+  // for the title and caption, since that part works fine. The caption
+  // Instagram shows on the post, and the description YouTube shows under
+  // a video, both come back the same way, as "description".
   //
   // Pass { force: true } (used by the retry sweep and the per-card retry
   // button) to bypass Microlink's cache instead of getting the same
@@ -1166,6 +1190,8 @@
     let image = null;
     let description = null;
     let deadYoutube = false;
+    let thumbMs = null;
+    const isInstagram = !ytId && getInstagramLink(url);
 
     if (ytId) {
       try {
@@ -1185,39 +1211,40 @@
         }
       } catch {}
       if (!image) image = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-    } else {
-      const isInstagram = getInstagramLink(url);
-      if (!isInstagram) {
-        const html = await fetchPageHtml(url);
-        if (html) {
-          const og = extractOpenGraph(html);
-          title = og.title;
-          image = og.image;
-          description = og.description;
-        }
+    } else if (!isInstagram) {
+      const html = await fetchPageHtml(url);
+      if (html) {
+        const og = extractOpenGraph(html);
+        title = og.title;
+        image = og.image;
+        description = og.description;
       }
     }
 
-    // Microlink fills any gap left above: the image and title for
-    // Instagram (which skipped the direct scrape entirely), or just the
-    // description for YouTube and any site whose og:description was
-    // missing or blocked. It also carries a screenshot back in the same
-    // response, used immediately below if no og:image/Microlink image
-    // turned up either.
-    let mickScreenshot = null;
-    if (!title || !image || !description) {
+    if (isInstagram) {
+      // Title/caption only from here — the image comes from the
+      // guaranteed screenshot pass below, not from this call.
+      const mick = await fetchMicrolinkMeta(url, force);
+      title = title || mick.title;
+      description = description || mick.description;
+    } else if (!title || !image || !description) {
+      // Microlink fills any gap left above — mainly the description for
+      // YouTube and any site whose og:description was missing/blocked.
       const mick = await fetchMicrolinkMeta(url, force);
       title = title || mick.title;
       image = image || mick.image;
       description = description || mick.description;
-      mickScreenshot = mick.screenshot;
     }
 
     if (!image) {
-      image = mickScreenshot || (await fetchScreenshot(url, force));
+      const shot = await fetchScreenshot(url, force);
+      if (shot) {
+        image = shot.url;
+        thumbMs = shot.ms;
+      }
     }
 
-    return { title, thumbnail: image, description, deadYoutube };
+    return { title, thumbnail: image, description, deadYoutube, thumbMs };
   }
 
   async function buildEntry(rawUrl, fallbackTitle) {
@@ -1332,15 +1359,21 @@
   // every card still missing a real thumbnail, re-running the full
   // fetchMeta waterfall (og:tags -> Microlink -> raw screenshot) each
   // time. Each item backs off a little further after every failed
-  // attempt — 30s, then 1m, 2m, 4m... capped at 20 minutes — so a
+  // attempt — 90s, then 3m, 6m, 12m... capped at 30 minutes — so a
   // handful of stubborn links don't get hammered nonstop, but nothing
   // ever "gives up": it keeps trying, indefinitely, until it gets a
   // real image, or you paste one in manually via the note modal.
+  // Automatic passes only work through a few items at a time, so a
+  // vault with a lot of missing thumbnails doesn't fire off a burst of
+  // slow screenshot requests all at once and trip Microlink's rate
+  // limit — that burst is exactly what was making thumbnails worse,
+  // not better. The manual "Retry thumbnails" button isn't capped.
   // ---------------------------------------------------------------
   let thumbRetryRunning = false;
+  const AUTO_SWEEP_BATCH = 3;
 
   function thumbBackoffMs(attempts) {
-    return Math.min(30000 * Math.pow(2, attempts || 0), 20 * 60 * 1000);
+    return Math.min(90000 * Math.pow(2, attempts || 0), 30 * 60 * 1000);
   }
 
   function missingThumbCount() {
@@ -1358,20 +1391,22 @@
       return;
     }
     const now = Date.now();
-    const targets = items.filter((i) => {
+    let targets = items.filter((i) => {
       if (i.hasRealImage) return false;
       if (manual) return true;
       const attempts = i.thumbAttempts || 0;
       const last = i.lastThumbAttempt || 0;
       return now - last >= thumbBackoffMs(attempts);
     });
+    if (!manual) targets = targets.slice(0, AUTO_SWEEP_BATCH);
     if (targets.length === 0) {
       if (manual) showToast("No missing thumbnails to retry right now.");
       return;
     }
     thumbRetryRunning = true;
-    if (manual) showToast(`Retrying ${targets.length} thumbnail${targets.length === 1 ? "" : "s"}…`);
+    if (manual) showToast(`Retrying ${targets.length} thumbnail${targets.length === 1 ? "" : "s"}… this can take a while per link, it keeps trying until it gets one.`);
     let fixed = 0;
+    let lastMs = null;
     for (const item of targets) {
       // Re-check the live item in case it changed (e.g. a manual thumbnail
       // was pasted in) while this loop was running.
@@ -1381,6 +1416,7 @@
       const attempts = (live.thumbAttempts || 0) + 1;
       if (meta.thumbnail) {
         fixed++;
+        lastMs = meta.thumbMs;
         await updateItem(live.id, {
           thumbnail: meta.thumbnail,
           hasRealImage: true,
@@ -1395,19 +1431,21 @@
         }).catch(() => {});
       }
       updateRetryThumbsBtnLabel();
-      await new Promise((r) => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 1200));
     }
     thumbRetryRunning = false;
     if (manual) {
+      const timing = lastMs ? ` (last one took ${(lastMs / 1000).toFixed(1)}s)` : "";
       showToast(fixed
-        ? `Found ${fixed} thumbnail${fixed === 1 ? "" : "s"}${fixed < targets.length ? `, still working on the rest` : ""}.`
+        ? `Found ${fixed} thumbnail${fixed === 1 ? "" : "s"}${timing}${fixed < targets.length ? `, still working on the rest` : ""}.`
         : "Still couldn't fetch those — it'll keep retrying automatically in the background.");
     }
   }
 
-  // Automatic background sweep: checks every minute, but each item only
-  // actually gets re-fetched once its own backoff window has passed.
-  setInterval(() => retryMissingThumbnails(false), 60000);
+  // Automatic background sweep: checks every 90 seconds, but each item
+  // only actually gets re-fetched once its own backoff window has
+  // passed, and only a few at a time (see AUTO_SWEEP_BATCH above).
+  setInterval(() => retryMissingThumbnails(false), 90000);
   setTimeout(() => retryMissingThumbnails(false), 5000);
 
 
@@ -1557,6 +1595,7 @@
           const btn = e.currentTarget;
           btn.disabled = true;
           btn.style.opacity = "0.5";
+          showToast("Fetching a screenshot — this can take up to a minute or so…");
           try {
             const meta = await fetchMeta(item.url, item.youtubeId, { force: true });
             const attempts = (item.thumbAttempts || 0) + 1;
@@ -1568,7 +1607,7 @@
                 thumbAttempts: attempts,
                 lastThumbAttempt: Date.now()
               });
-              showToast("Thumbnail found.");
+              showToast(meta.thumbMs ? `Thumbnail found in ${(meta.thumbMs / 1000).toFixed(1)}s.` : "Thumbnail found.");
             } else {
               await updateItem(item.id, { thumbAttempts: attempts, lastThumbAttempt: Date.now() });
               showToast("Still nothing — it'll keep retrying automatically.", true);

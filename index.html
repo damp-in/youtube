@@ -208,10 +208,84 @@
     color: var(--accent);
   }
 
+  .view-toggle {
+    display: flex;
+    gap: 4px;
+    margin-left: 10px;
+    flex-shrink: 0;
+  }
+
+  .view-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.15s ease;
+  }
+
+  .view-btn:hover { color: var(--text); border-color: var(--accent-dim-2); }
+
+  .view-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent-dim-2);
+    color: var(--accent);
+  }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 18px;
+  }
+
+  /* ---------- list view ---------- */
+  .grid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .grid.list-view .card {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .grid.list-view .card:hover { transform: none; }
+
+  .grid.list-view .thumb-wrap {
+    width: 120px;
+    min-width: 120px;
+    aspect-ratio: unset;
+  }
+
+  .grid.list-view .card-body {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    padding: 8px 14px;
+  }
+
+  .grid.list-view .card-description,
+  .grid.list-view .card-note {
+    -webkit-line-clamp: 1;
+  }
+
+  .grid.list-view .card-actions {
+    position: static;
+    opacity: 1;
+    align-items: center;
+    padding-right: 12px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 640px) {
+    .grid.list-view .thumb-wrap { width: 78px; min-width: 78px; }
+    .grid.list-view .card-actions button { width: 26px; height: 26px; }
   }
 
   .card {
@@ -627,6 +701,7 @@
       <button class="icon-btn" id="importBtn">Import Safari bookmarks</button>
       <button class="icon-btn" id="backupBtn">Download backup</button>
       <button class="icon-btn" id="recheckBtn">Recheck links</button>
+      <button class="icon-btn" id="retryThumbsBtn">Retry thumbnails</button>
       <button class="icon-btn" id="bookmarkletBtn">Get quick-save button</button>
     </div>
   </div>
@@ -649,6 +724,7 @@
   <div class="filter-tabs">
     <button class="filter-tab active" data-filter="all">All</button>
     <button class="filter-tab" data-filter="video">Videos</button>
+    <button class="filter-tab" data-filter="instagram">Instagram</button>
     <button class="filter-tab" data-filter="other">Pages</button>
     <button class="filter-tab" data-filter="inactive">Inactive</button>
     <select class="sort-select" id="sortSelect">
@@ -656,6 +732,14 @@
       <option value="oldest">Oldest first</option>
       <option value="title">Title A–Z</option>
     </select>
+    <div class="view-toggle" id="viewToggle">
+      <button class="view-btn" data-view="grid" title="Grid view">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </button>
+      <button class="view-btn" data-view="list" title="List view">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -750,6 +834,7 @@
   let items = [];
   let activeFilter = "all";
   let sortMode = "newest";
+  let viewMode = localStorage.getItem("vault_view_mode") || "grid";
 
   // Regardless of Firebase, every snapshot is also mirrored into
   // localStorage. This is a pure safety net: if Firestore is ever
@@ -1211,6 +1296,93 @@
     if (force) showToast(`Checked ${targets.length} link${targets.length === 1 ? "" : "s"}${changed ? `, moved ${changed} to Inactive` : ""}.`);
   }
 
+  // ---------------------------------------------------------------
+  // THUMBNAIL RETRY
+  // Some links don't hand back a real image on the first pass — a
+  // proxy timed out, Microlink was momentarily rate-limited, or the
+  // screenshot fallback itself failed to load. Rather than leaving
+  // those cards stuck on a plain favicon forever, this quietly retries
+  // every card still missing a real thumbnail, re-running the full
+  // fetchMeta waterfall (og:tags -> Microlink -> raw screenshot) each
+  // time. Each item backs off a little further after every failed
+  // attempt — 30s, then 1m, 2m, 4m... capped at 20 minutes — so a
+  // handful of stubborn links don't get hammered nonstop, but nothing
+  // ever "gives up": it keeps trying, indefinitely, until it gets a
+  // real image, or you paste one in manually via the note modal.
+  // ---------------------------------------------------------------
+  let thumbRetryRunning = false;
+
+  function thumbBackoffMs(attempts) {
+    return Math.min(30000 * Math.pow(2, attempts || 0), 20 * 60 * 1000);
+  }
+
+  function missingThumbCount() {
+    return items.filter((i) => !i.hasRealImage).length;
+  }
+
+  function updateRetryThumbsBtnLabel() {
+    const n = missingThumbCount();
+    retryThumbsBtn.textContent = n ? `Retry thumbnails (${n})` : "Retry thumbnails";
+  }
+
+  async function retryMissingThumbnails(manual) {
+    if (thumbRetryRunning) {
+      if (manual) showToast("Already retrying thumbnails…");
+      return;
+    }
+    const now = Date.now();
+    const targets = items.filter((i) => {
+      if (i.hasRealImage) return false;
+      if (manual) return true;
+      const attempts = i.thumbAttempts || 0;
+      const last = i.lastThumbAttempt || 0;
+      return now - last >= thumbBackoffMs(attempts);
+    });
+    if (targets.length === 0) {
+      if (manual) showToast("No missing thumbnails to retry right now.");
+      return;
+    }
+    thumbRetryRunning = true;
+    if (manual) showToast(`Retrying ${targets.length} thumbnail${targets.length === 1 ? "" : "s"}…`);
+    let fixed = 0;
+    for (const item of targets) {
+      // Re-check the live item in case it changed (e.g. a manual thumbnail
+      // was pasted in) while this loop was running.
+      const live = items.find((i) => i.id === item.id);
+      if (!live || live.hasRealImage) continue;
+      const meta = await fetchMeta(live.url, live.youtubeId);
+      const attempts = (live.thumbAttempts || 0) + 1;
+      if (meta.thumbnail) {
+        fixed++;
+        await updateItem(live.id, {
+          thumbnail: meta.thumbnail,
+          hasRealImage: true,
+          description: live.description || meta.description || "",
+          thumbAttempts: attempts,
+          lastThumbAttempt: Date.now()
+        }).catch(() => {});
+      } else {
+        await updateItem(live.id, {
+          thumbAttempts: attempts,
+          lastThumbAttempt: Date.now()
+        }).catch(() => {});
+      }
+      updateRetryThumbsBtnLabel();
+      await new Promise((r) => setTimeout(r, 600));
+    }
+    thumbRetryRunning = false;
+    if (manual) {
+      showToast(fixed
+        ? `Found ${fixed} thumbnail${fixed === 1 ? "" : "s"}${fixed < targets.length ? `, still working on the rest` : ""}.`
+        : "Still couldn't fetch those — it'll keep retrying automatically in the background.");
+    }
+  }
+
+  // Automatic background sweep: checks every minute, but each item only
+  // actually gets re-fetched once its own backoff window has passed.
+  setInterval(() => retryMissingThumbnails(false), 60000);
+  setTimeout(() => retryMissingThumbnails(false), 5000);
+
 
   // Opens the real site in a new tab, logged in as usual, so Premium and
   // ad-free playback carry over normally, and native fullscreen is a click
@@ -1237,10 +1409,17 @@
     if (activeFilter === "inactive") {
       list = list.filter((i) => i.status === "inactive");
     } else {
-      // Dead links never show in All/Videos/Pages — that's the whole
-      // point of the Inactive tab, so they don't clutter browsing.
+      // Dead links never show in All/Videos/Instagram/Pages — that's the
+      // whole point of the Inactive tab, so they don't clutter browsing.
       list = list.filter((i) => i.status !== "inactive");
-      if (activeFilter !== "all") list = list.filter((i) => i.type === activeFilter);
+      if (activeFilter === "video") {
+        // Instagram gets its own tab now, so Videos means YouTube only.
+        list = list.filter((i) => i.platform === "youtube");
+      } else if (activeFilter === "instagram") {
+        list = list.filter((i) => i.platform === "instagram");
+      } else if (activeFilter !== "all") {
+        list = list.filter((i) => i.type === activeFilter);
+      }
     }
     if (query) {
       list = list.filter((i) =>
@@ -1261,7 +1440,13 @@
     const inactiveTab = document.querySelector('.filter-tab[data-filter="inactive"]');
     if (inactiveTab) inactiveTab.textContent = inactiveCount ? `Inactive (${inactiveCount})` : "Inactive";
 
+    const instagramCount = items.filter((i) => i.platform === "instagram" && i.status !== "inactive").length;
+    const instagramTab = document.querySelector('.filter-tab[data-filter="instagram"]');
+    if (instagramTab) instagramTab.textContent = instagramCount ? `Instagram (${instagramCount})` : "Instagram";
+
     countLabel.textContent = items.length + (items.length === 1 ? " link" : " links");
+    if (typeof updateRetryThumbsBtnLabel === "function") updateRetryThumbsBtnLabel();
+    grid.className = "grid" + (viewMode === "list" ? " list-view" : "");
     grid.innerHTML = "";
 
     if (list.length === 0) {
@@ -1550,6 +1735,23 @@
   });
 
   // ---------------------------------------------------------------
+  // GRID / LIST VIEW TOGGLE — preference remembered per-device.
+  // ---------------------------------------------------------------
+  const viewButtons = document.querySelectorAll(".view-btn");
+  function syncViewButtons() {
+    viewButtons.forEach((b) => b.classList.toggle("active", b.dataset.view === viewMode));
+  }
+  syncViewButtons();
+  viewButtons.forEach((btn) => {
+    btn.onclick = () => {
+      viewMode = btn.dataset.view;
+      localStorage.setItem("vault_view_mode", viewMode);
+      syncViewButtons();
+      render();
+    };
+  });
+
+  // ---------------------------------------------------------------
   // IMPORT SAFARI BOOKMARKS
   // ---------------------------------------------------------------
   const importBtn = document.getElementById("importBtn");
@@ -1633,6 +1835,8 @@
   };
 
   document.getElementById("recheckBtn").onclick = () => sweepLinkStatuses(true);
+  const retryThumbsBtn = document.getElementById("retryThumbsBtn");
+  retryThumbsBtn.onclick = () => retryMissingThumbnails(true);
 
   // ---------------------------------------------------------------
   // SORTING

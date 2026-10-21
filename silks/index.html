@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Naqsh Silks | Woven Impressions of India</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1d2433;--stone:#f2f0ec;--paper:#fbfaf8;--zari:#a58a52;--madder:#8c3b3b;--mute:#6b6f7a;--line:#dedad3;--serif:'Cormorant Garamond',Georgia,serif;--sans:'Jost',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);font-weight:300;color:var(--ink);background:var(--paper);line-height:1.7;font-size:16px}
+h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.1;letter-spacing:.01em}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+:focus-visible{outline:2px solid var(--zari);outline-offset:3px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+section{padding:96px 0}
+header{position:sticky;top:0;z-index:20;background:rgba(251,250,248,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;height:74px}
+.logo{display:flex;align-items:center;gap:12px;font-family:var(--serif);font-size:28px;letter-spacing:.14em;font-weight:500}
+.logo svg{width:26px;height:26px}
+nav{display:flex;gap:32px;font-size:15px}
+nav a{color:var(--mute);transition:color .3s}nav a:hover{color:var(--ink)}
+.tools{display:flex;gap:18px;font-size:15px;color:var(--mute)}
+.tools b{font-weight:400;color:var(--ink)}
+/* hero doors */
+.hero{padding:0}
+.doors{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 74px);max-height:760px}
+.door{position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:56px;color:#fff;isolation:isolate}
+.door .art{position:absolute;inset:0;z-index:-2;transition:transform 2.4s cubic-bezier(.2,.6,.2,1)}
+.door .art svg{width:100%;height:100%;display:block}
+.door:hover .art{transform:scale(1.04)}
+.door::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(to top,rgba(20,24,36,.78),rgba(20,24,36,.05) 62%)}
+.door h2{font-size:clamp(44px,6vw,78px);margin-bottom:10px}
+.door p{max-width:340px;font-size:17px;opacity:.9;margin-bottom:22px}
+.door .cta{border-bottom:1px solid #fff;padding-bottom:3px;font-size:15px;letter-spacing:.06em}
+.intro{text-align:center;max-width:640px;margin:0 auto}
+.intro h1{font-size:clamp(34px,4.6vw,54px);margin-bottom:18px}
+.intro p{color:var(--mute);font-size:18px}
+.reveal{opacity:0;transition:opacity 1.4s ease}.reveal.in{opacity:1}
+/* trust */
+.trust{border-block:1px solid var(--line);background:var(--stone);padding:20px 0;font-size:14px;color:var(--mute)}
+.trust .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+/* regions */
+.regions{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:56px}
+.reg{cursor:pointer;text-align:left}
+.reg .pic{aspect-ratio:4/5;overflow:hidden;background:var(--stone);margin-bottom:16px;position:relative}
+.reg .pic svg{width:100%;height:100%;display:block;transition:transform 1.6s ease}
+.reg:hover .pic svg{transform:scale(1.04)}
+.reg h3{font-size:30px}
+.reg small{display:block;color:var(--zari);font-size:14px;margin:2px 0 8px;letter-spacing:.04em}
+.reg p{color:var(--mute);font-size:15px;max-width:320px}
+/* shop */
+.shop{background:var(--stone)}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:34px}
+.head h2{font-size:clamp(34px,4vw,48px)}
+.filters{display:flex;gap:12px;flex-wrap:wrap}
+select{font:inherit;font-size:14px;padding:9px 34px 9px 14px;border:1px solid var(--line);background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236b6f7a'/%3E%3C/svg%3E") no-repeat right 14px center;appearance:none;color:var(--ink);border-radius:2px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
+.card{cursor:pointer;text-align:left;display:block}
+.card .pic{aspect-ratio:3/4;overflow:hidden;background:#e6e2da;margin-bottom:12px;position:relative}
+.card .pic svg{width:100%;height:100%;display:block;transition:transform 1.4s ease}
+.card:hover .pic svg{transform:scale(1.05)}
+.tag{position:absolute;left:10px;bottom:10px;background:rgba(251,250,248,.92);font-size:12px;padding:3px 10px;letter-spacing:.04em}
+.card h3{font-size:22px;margin-bottom:2px}
+.card span{font-size:14px;color:var(--mute)}
+.empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:40px}
+/* weaver */
+.weaver{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.weaver .pic{aspect-ratio:4/5;background:var(--stone);overflow:hidden}
+.weaver .pic svg{width:100%;height:100%;display:block}
+.weaver h2{font-size:clamp(34px,4vw,50px);margin-bottom:22px}
+.weaver p{color:var(--mute);font-size:18px;margin-bottom:18px;max-width:480px}
+.weaver q{display:block;font-family:var(--serif);font-style:italic;font-size:26px;line-height:1.35;margin:26px 0;color:var(--ink);quotes:"\201C" "\201D"}
+.woven{display:inline-block;border:1px solid var(--zari);color:var(--zari);padding:5px 14px;font-size:14px}
+/* guide */
+.guide{background:var(--ink);color:#efece6}
+.guide h2{font-size:clamp(34px,4vw,48px);margin-bottom:12px}
+.guide .lead{color:#b4b8c4;max-width:560px;font-size:18px;margin-bottom:44px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#394055}
+.col{background:var(--ink);padding:36px}
+.col h3{font-size:34px;margin-bottom:20px;color:#d8c391}
+.col dl div{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:12px 0;border-top:1px solid #394055;font-size:15px}
+.col dt{color:#8e94a6}
+/* store */
+.store{text-align:center}
+.store h2{font-size:clamp(34px,4vw,48px);margin-bottom:14px}
+.store p{color:var(--mute);max-width:520px;margin:0 auto 26px;font-size:18px}
+.btn{display:inline-block;background:var(--ink);color:#fff;padding:14px 32px;font-size:15px;letter-spacing:.05em;transition:background .3s}
+.btn:hover{background:var(--madder)}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--ink)}
+.btn.ghost:hover{background:var(--ink);color:#fff}
+.note{font-size:13px;color:var(--mute);margin-top:16px}
+footer{background:var(--stone);padding:64px 0 36px;border-top:1px solid var(--line);font-size:15px}
+.fgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.4fr;gap:40px;margin-bottom:44px}
+footer h4{font-family:var(--serif);font-size:20px;font-weight:500;margin-bottom:12px}
+footer li{list-style:none;color:var(--mute);margin-bottom:6px}
+.nl{display:flex;gap:0;margin-top:10px}
+.nl input{flex:1;font:inherit;padding:11px 14px;border:1px solid var(--line);background:var(--paper);min-width:0}
+.nl button{background:var(--ink);color:#fff;padding:0 20px;font-size:14px}
+.copy{color:var(--mute);font-size:13px;border-top:1px solid var(--line);padding-top:22px}
+.wa{position:fixed;right:22px;bottom:22px;z-index:30;background:var(--paper);border:1px solid var(--line);box-shadow:0 6px 24px rgba(29,36,51,.14);padding:11px 20px 11px 14px;display:flex;align-items:center;gap:10px;font-size:14px;border-radius:40px}
+.wa i{width:26px;height:26px;border-radius:50%;background:#3d7a5c;display:grid;place-items:center}
+.wa svg{width:14px;height:14px}
+/* modal product page */
+.modal{position:fixed;inset:0;z-index:50;background:var(--paper);overflow-y:auto;display:none}
+.modal.open{display:block;animation:fade .5s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.mtop{display:flex;justify-content:space-between;align-items:center;height:74px;border-bottom:1px solid var(--line);padding:0 28px;position:sticky;top:0;background:var(--paper);z-index:2}
+.pd{display:grid;grid-template-columns:1.1fr 1fr;gap:64px;padding:48px 0 80px}
+.gal .main{aspect-ratio:3/4;background:var(--stone);overflow:hidden;cursor:zoom-in}
+.gal .main svg{width:100%;height:100%;display:block;transition:transform .5s}
+.gal .main.z svg{transform:scale(1.7)}
+.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.thumbs button{aspect-ratio:3/4;background:var(--stone);border:1px solid transparent;overflow:hidden;opacity:.7}
+.thumbs button.on{border-color:var(--zari);opacity:1}
+.thumbs svg{width:100%;height:100%;display:block}
+.cap{font-size:13px;color:var(--mute);margin-top:8px}
+.info .crumb{font-size:14px;color:var(--zari);margin-bottom:10px}
+.info h2{font-size:48px;margin-bottom:8px}
+.info .pr{font-size:22px;margin-bottom:20px}
+.info .desc{color:var(--mute);font-size:17px;margin-bottom:24px}
+.tbl{border-top:1px solid var(--line);margin:24px 0;font-size:15px}
+.tbl div{display:grid;grid-template-columns:140px 1fr;padding:10px 0;border-bottom:1px solid var(--line)}
+.tbl dt{color:var(--mute)}
+.row{display:flex;gap:12px;margin:22px 0}
+.row .btn{flex:1;text-align:center}
+.mini{font-size:14px;color:var(--mute);display:flex;gap:18px;flex-wrap:wrap}
+.rev{margin-top:34px;border-top:1px solid var(--line);padding-top:22px}
+.rev h4{font-family:var(--serif);font-size:22px;font-weight:500;margin-bottom:10px}
+.rev p{font-size:15px;color:var(--mute);margin-bottom:12px}
+.sticky{display:none}
+@media(max-width:900px){
+ nav{display:none}.doors{grid-template-columns:1fr;max-height:none}.door{min-height:60vh;padding:32px}
+ .regions,.weaver,.cols,.pd,.fgrid{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr);gap:16px}
+ .weaver{gap:36px}section{padding:64px 0}.pd{gap:30px}.wa span{display:none}.wa{padding:11px 12px}
+ .sticky{display:block;position:sticky;bottom:0;background:var(--paper);padding:12px 20px;border-top:1px solid var(--line)}
+ .sticky .btn{width:100%}.info h2{font-size:38px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1}}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+ <a class="logo" href="#top"><svg viewBox="0 0 32 32" fill="none" stroke="#a58a52" stroke-width="1.3"><path d="M7 27C9 14 17 6 27 4c-1 9-7 18-18 22"/><path d="M9 25c4-6 9-11 16-18M13 21l-1-5M16 18l-1-5M19 15l-1-5"/></svg>NAQSH</a>
+ <nav><a href="#doors">Handloom</a><a href="#doors">Power Loom</a><a href="#regions">Regions</a><a href="#weaver">Weavers</a><a href="#guide">Guide</a><a href="#store">Visit</a></nav>
+ <div class="tools"><span>Search</span><span>Wishlist <b id="wc">0</b></span><span>Bag</span></div>
+</div></header>
+
+<main id="top">
+<section class="hero" id="doors">
+ <div class="doors">
+  <a class="door" href="#shop" data-loom="Handloom"><div class="art" data-sw="0"></div><div><h2>Handloom</h2><p>One saree, one weaver, weeks at the loom. Woven slowly, worn for decades.</p><span class="cta">Enter the handloom collection</span></div></a>
+  <a class="door" href="#shop" data-loom="Power Loom"><div class="art" data-sw="5"></div><div><h2>Power Loom</h2><p>The same regional designs, made with precision and priced for every day.</p><span class="cta">Enter the power loom collection</span></div></a>
+ </div>
+</section>
+
+<div class="trust"><div class="wrap"><span>Authentic silk, sourced from weavers</span><span>Secure payment</span><span>Insured shipping across India</span><span>Easy returns</span></div></div>
+
+<section>
+ <div class="wrap intro reveal">
+  <h1>Woven impressions of India</h1>
+  <p>Naqsh brings silk to you through the places that weave it. Start with the loom, find the region, then meet the saree. Take your time, we do.</p>
+ </div>
+</section>
+
+<section id="regions" style="padding-top:0">
+ <div class="wrap">
+  <div class="head"><h2>Silks, told by their region</h2></div>
+  <div class="regions reveal" id="regGrid"></div>
+ </div>
+</section>
+
+<section class="shop" id="shop">
+ <div class="wrap">
+  <div class="head">
+   <h2 id="shopTitle">All sarees</h2>
+   <div class="filters">
+    <select id="fLoom" aria-label="Loom"><option value="">Loom: all</option><option>Handloom</option><option>Power Loom</option></select>
+    <select id="fReg" aria-label="Region"><option value="">Region: all</option></select>
+    <select id="fCol" aria-label="Colour"><option value="">Colour: all</option></select>
+    <select id="fPr" aria-label="Price"><option value="">Price: any</option><option value="0-10000">Under Rs. 10,000</option><option value="10000-25000">Rs. 10,000 to 25,000</option><option value="25000-999999">Above Rs. 25,000</option></select>
+   </div>
+  </div>
+  <div class="grid" id="grid"></div>
+ </div>
+</section>
+
+<section id="weaver">
+ <div class="wrap weaver">
+  <div class="pic reveal" data-sw="2"></div>
+  <div class="reveal">
+   <h2>Meet the weaver</h2>
+   <p>Behind every saree is a name, a loom and a town. On every region and product page you will see who wove it, where, and how long it took.</p>
+   <q>My father taught me to count the threads by touch. I still do, before the pallu begins.</q>
+   <p>Venkatesh, master weaver, Kanchipuram. Three generations at the same loom.</p>
+   <span class="woven">Woven in Kanchipuram, Tamil Nadu</span>
+  </div>
+ </div>
+</section>
+
+<section class="guide" id="guide">
+ <div class="wrap">
+  <h2>Handloom or power loom?</h2>
+  <p class="lead">An honest look at the difference, so you can choose what suits the occasion and the budget.</p>
+  <div class="cols">
+   <div class="col"><h3>Handloom</h3><dl>
+    <div><dt>Process</dt><dd>Woven by hand on a pit or frame loom, thread by thread.</dd></div>
+    <div><dt>Time</dt><dd>One week to two months for a single saree.</dd></div>
+    <div><dt>Feel</dt><dd>Soft, slightly uneven, with small signs of the maker.</dd></div>
+    <div><dt>Price</dt><dd>Higher, as it carries weeks of skilled work.</dd></div>
+    <div><dt>Best for</dt><dd>Weddings, heirlooms, milestone gifts.</dd></div></dl></div>
+   <div class="col"><h3>Power loom</h3><dl>
+    <div><dt>Process</dt><dd>Woven by machine from the same traditional designs.</dd></div>
+    <div><dt>Time</dt><dd>A day or two per saree.</dd></div>
+    <div><dt>Feel</dt><dd>Even, crisp and consistent from piece to piece.</dd></div>
+    <div><dt>Price</dt><dd>Accessible, without leaving silk behind.</dd></div>
+    <div><dt>Best for</dt><dd>Festivals, office wear, everyday elegance.</dd></div></dl></div>
+  </div>
+ </div>
+</section>
+
+<section class="store" id="store">
+ <div class="wrap reveal">
+  <h2>Our Bengaluru store is coming</h2>
+  <p>Soon you can feel the silk in person. Request an appointment and we will keep the counter ready for you.</p>
+  <a class="btn ghost" href="#store">Request an appointment</a>
+  <div class="note">This page switches on when the store opens.</div>
+ </div>
+</section>
+</main>
+
+<footer><div class="wrap">
+ <div class="fgrid">
+  <div><h4>Naqsh Silks</h4><p style="color:var(--mute)">Handloom and power loom silks, told through the regions that weave them. Bengaluru.</p></div>
+  <div><h4>Shop</h4><ul><li>Handloom</li><li>Power Loom</li><li>Regions</li><li>Silk care guide</li></ul></div>
+  <div><h4>Help</h4><ul><li>Our story</li><li>Shipping and returns</li><li>FAQ</li><li>Contact</li></ul></div>
+  <div><h4>Letters from the loom</h4><p style="color:var(--mute)">New arrivals and weaver stories, once a month.</p><form class="nl" onsubmit="event.preventDefault();this.innerHTML='<span>Thank you, you are on the list.</span>'"><input type="email" placeholder="Your email" aria-label="Email"><button>Subscribe</button></form></div>
+ </div>
+ <div class="copy">© 2026 Naqsh Silks. Design model for client review.</div>
+</div></footer>
+
+<a class="wa" href="#" aria-label="Chat on WhatsApp"><i><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 00-8.6 15L2 22l5.2-1.4A10 10 0 1012 2z"/></svg></i><span>Ask us, or request a live video look</span></a>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+ <div class="mtop"><a class="logo" href="#" onclick="closeM();return false" style="font-size:24px">NAQSH</a><button onclick="closeM()">Close</button></div>
+ <div class="wrap pd" id="pd"></div>
+ <div class="sticky"><button class="btn" onclick="this.textContent='Added to bag'">Add to bag</button></div>
+</div>
+
+<script>
+const S=[
+{n:"Kanchipuram Temple Border",r:"Kanchipuram",l:"Handloom",c:"Madder red",b:"#8c2f3a",d:"#d6b56a",z:"#e8cf8e",p:"butta",pr:38500,len:"6.3 m",bl:"Woven in, 0.8 m",zr:"Pure zari",yr:"2026"},
+{n:"Pochampally Ikat Indigo",r:"Pochampally",l:"Handloom",c:"Indigo",b:"#243b63",d:"#c9b9a0",z:"#efe3cf",p:"ikat",pr:14800,len:"5.5 m",bl:"Separate, 0.9 m",zr:"None",yr:"2026"},
+{n:"Mysore Crepe Sage",r:"Mysore",l:"Power Loom",c:"Sage",b:"#7d8c6f",d:"#a58a52",z:"#e3cf9b",p:"stripe",pr:8900,len:"5.5 m",bl:"Attached, 0.8 m",zr:"Gold finish",yr:"2026"},
+{n:"Banarasi Brocade Plum",r:"Banarasi",l:"Handloom",c:"Plum",b:"#4d2a48",d:"#c9a85c",z:"#ecd79a",p:"butta",pr:29500,len:"6.2 m",bl:"Attached, 1 m",zr:"Pure zari",yr:"2026"},
+{n:"Mysore Silk Ivory",r:"Mysore",l:"Handloom",c:"Ivory",b:"#e9e2d3",d:"#8c3b3b",z:"#b79b5a",p:"stripe",pr:18200,len:"5.5 m",bl:"Separate, 0.9 m",zr:"Pure zari",yr:"2026"},
+{n:"Pochampally Ikat Rust",r:"Pochampally",l:"Power Loom",c:"Rust",b:"#a2542f",d:"#2c3a4f",z:"#e5d3ac",p:"ikat",pr:6900,len:"5.5 m",bl:"Attached, 0.8 m",zr:"None",yr:"2026"},
+{n:"Kanchipuram Bottle Green",r:"Kanchipuram",l:"Power Loom",c:"Green",b:"#2f5c4b",d:"#c9a85c",z:"#ecd79a",p:"check",pr:11900,len:"6.2 m",bl:"Attached, 0.9 m",zr:"Gold finish",yr:"2026"},
+{n:"Banarasi Georgette Blush",r:"Banarasi",l:"Power Loom",c:"Blush",b:"#d9b5ae",d:"#8c3b3b",z:"#f0e2c0",p:"butta",pr:9800,len:"5.5 m",bl:"Attached, 0.8 m",zr:"Gold finish",yr:"2026"}];
+const R=[
+{n:"Kanchipuram",a:"Tamil Nadu",m:"Shore temple lines",t:"Temple borders and heavy mulberry silk, woven in contrasting borders and pallus.",i:0},
+{n:"Pochampally",a:"Telangana",m:"Charminar, Hyderabad",t:"Ikat, where threads are dyed before weaving so the pattern blurs softly.",i:1},
+{n:"Mysore",a:"Karnataka",m:"Mysore Palace",t:"Light crepe silk with a quiet sheen and fine zari borders.",i:4}];
+let sid=0;
+function sw(s,v=0){
+ const id="p"+(sid++),vb=["0 0 300 400","60 80 120 160","0 0 90 120","105 280 90 120"][v];
+ const mot={butta:`<path d="M10 2l6 8-6 8-6-8z" fill="${s.z}"/>`,ikat:`<path d="M0 10l6-8 6 8 6-8" fill="none" stroke="${s.d}" stroke-width="2"/><path d="M0 18l6-8 6 8 6-8" fill="none" stroke="${s.z}" stroke-width="1"/>`,check:`<path d="M0 0h20v20H0z" fill="none" stroke="${s.z}" stroke-width="1"/><circle cx="10" cy="10" r="2" fill="${s.z}"/>`,stripe:`<path d="M0 6h20M0 14h20" stroke="${s.z}" stroke-width="1" opacity=".8"/>`}[s.p];
+ let pal="";for(let i=0;i<8;i++)pal+=`<path d="M${32+i*30} 392c0-10 7-18 15-34 8 16 15 24 15 34z" fill="${s.z}" opacity=".9"/>`;
+ return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="${id}" width="20" height="20" patternUnits="userSpaceOnUse">${mot}</pattern><linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient></defs>
+ <rect width="300" height="400" fill="${s.b}"/><rect width="300" height="400" fill="url(#${id})"/>
+ <rect width="24" height="400" fill="${s.d}"/><rect x="276" width="24" height="400" fill="${s.d}"/><path d="M30 0v400M270 0v400" stroke="${s.z}" stroke-width="2"/><path d="M6 0v400M294 0v400" stroke="${s.z}" stroke-width="1"/>
+ <rect y="276" width="300" height="124" fill="${s.d}"/><rect y="282" width="300" height="3" fill="${s.z}"/><rect y="296" width="300" height="1" fill="${s.z}"/>${pal}<rect y="306" width="300" height="44" fill="url(#${id})" opacity=".9"/>
+ <rect width="300" height="400" fill="url(#${id}g)"/></svg>`}
+const fmt=n=>"Rs. "+n.toLocaleString("en-IN");
+document.querySelectorAll("[data-sw]").forEach(e=>e.innerHTML=sw(S[+e.dataset.sw]));
+document.getElementById("regGrid").innerHTML=R.map(r=>`<button class="reg" onclick="setReg('${r.n}')"><div class="pic">${sw(S[r.i])}</div><h3>${r.n}</h3><small>${r.a}, ${r.m}</small><p>${r.t}</p></button>`).join("");
+const uniq=k=>[...new Set(S.map(s=>s[k]))];
+uniq("r").forEach(v=>fReg.add(new Option(v,v)));uniq("c").forEach(v=>fCol.add(new Option(v,v)));
+function render(){
+ const [lo,hi]=(fPr.value||"0-9999999").split("-").map(Number);
+ const L=S.map((s,i)=>({...s,i})).filter(s=>(!fLoom.value||s.l===fLoom.value)&&(!fReg.value||s.r===fReg.value)&&(!fCol.value||s.c===fCol.value)&&s.pr>=lo&&s.pr<=hi);
+ grid.innerHTML=L.length?L.map(s=>`<button class="card" onclick="openM(${s.i})"><div class="pic">${sw(s)}<span class="tag">Woven in ${s.r}</span></div><h3>${s.n}</h3><span>${s.l}, ${fmt(s.pr)}</span></button>`).join(""):`<div class="empty">No sarees match these filters. Clear one to see more.</div>`;
+ shopTitle.textContent=fLoom.value?fLoom.value+" sarees":"All sarees"}
+[fLoom,fReg,fCol,fPr].forEach(f=>f.onchange=render);render();
+function setReg(r){fReg.value=r;render();document.getElementById("shop").scrollIntoView()}
+document.querySelectorAll(".door").forEach(d=>d.onclick=()=>{fLoom.value=d.dataset.loom;fReg.value="";render()});
+let cur=0,view=0,wl=0;
+const caps=["Full drape","Body, close up","Border, close up","Pallu, close up"];
+function openM(i){cur=i;view=0;drawM();modal.classList.add("open");modal.scrollTop=0;document.body.style.overflow="hidden"}
+function closeM(){modal.classList.remove("open");document.body.style.overflow=""}
+function setV(v){view=v;drawM()}
+function drawM(){
+ const s=S[cur];
+ pd.innerHTML=`<div class="gal"><div class="main" onclick="this.classList.toggle('z')">${sw(s,view)}</div><div class="cap">${caps[view]}. Tap the image to zoom.</div><div class="thumbs">${[0,1,2,3].map(v=>`<button class="${v==view?'on':''}" onclick="setV(${v})" aria-label="${caps[v]}">${sw(s,v)}</button>`).join("")}</div></div>
+ <div class="info"><div class="crumb">${s.l} / ${s.r}</div><h2>${s.n}</h2><div class="pr">${fmt(s.pr)}</div>
+ <p class="desc">A ${s.l.toLowerCase()} silk from ${s.r}, in ${s.c.toLowerCase()} with a ${s.zr.toLowerCase()} border. Photographed in daylight so the colour you see is the colour that arrives.</p>
+ <span class="woven">Woven in ${s.r}</span>
+ <dl class="tbl"><div><dt>Silk type</dt><dd>Pure silk</dd></div><div><dt>Region</dt><dd>${s.r}</dd></div><div><dt>Loom</dt><dd>${s.l}</dd></div><div><dt>Zari</dt><dd>${s.zr}</dd></div><div><dt>Length</dt><dd>${s.len}</dd></div><div><dt>Blouse piece</dt><dd>${s.bl}</dd></div><div><dt>Year of weaving</dt><dd>${s.yr}</dd></div><div><dt>Care</dt><dd>Dry clean only. Fold with muslin.</dd></div></dl>
+ <div class="row"><button class="btn" onclick="this.textContent='Added to bag'">Add to bag</button><button class="btn ghost" onclick="wl+=1;wc.textContent=wl;this.textContent='Saved'">Wishlist</button></div>
+ <div class="mini"><span>Authentic silk</span><span>Secure payment</span><span>Shipping and returns</span></div>
+ <p class="note" style="margin-top:14px">Want to see it live? Request a video look on WhatsApp before you pay.</p>
+ <div class="rev"><h4>What buyers say</h4><p>The colour is exactly as shown, and the border is even heavier than I expected. Arrived well wrapped. Priya, Bengaluru</p><p>Soft, rich and easy to drape. Worth the wait. Meenakshi, Chennai</p></div></div>`}
+document.addEventListener("keydown",e=>e.key==="Escape"&&closeM());
+const io=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add("in")),{threshold:.15});
+document.querySelectorAll(".reveal").forEach(e=>io.observe(e));
+</script>
+</body>
+</html>
